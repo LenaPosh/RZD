@@ -71,7 +71,7 @@ const RightContainer = styled.div`
   display: flex;
   align-items: center;
   margin-left: auto;
-  margin-right: 20px;
+  margin-right: 40px;
 `;
 
 

@@ -175,8 +175,7 @@ const MainMenu = () => {
                     </Sidebar>
                     <MapAndInfoWrapper>
                         <SearchIDContainer>
-                            <SearchInput style={{width: "100px"}} placeholder="Поиск по ID" />
-                            <SearchIcon />
+                            <SearchInput placeholder="Поиск по ID" />
                         </SearchIDContainer>
                         <MapContainer>
 

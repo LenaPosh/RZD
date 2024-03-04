@@ -16,8 +16,9 @@ export const BriefInfoContainer = styled.div`
   display: flex;
   height: 130px;
   width: 230px;
-  align-items: flex-start;
+  align-items: center;
   flex-direction: column;
+  justify-content: center;
 `;
 
 export const BriefInfoTitle = styled.h4`
@@ -27,6 +28,7 @@ export const BriefInfoTitle = styled.h4`
   line-height: 8px;
   letter-spacing: 0;
   text-align: center;
+  width: 100%;
 `;
 
 export const BriefInfoText = styled.div`
