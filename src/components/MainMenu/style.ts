@@ -57,6 +57,13 @@ export const SearchInputContainer = styled.div`
   align-items: center;
 `;
 
+export const SearchIDContainer = styled.div`
+  display: flex;
+  align-items: center;
+  align-self: flex-start;
+  margin-top: 10px;
+`;
+
 export const SearchInput = styled.input`
   padding: 8px 8px 8px 10px;
   border: 1px solid #ccc;

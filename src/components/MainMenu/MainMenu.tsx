@@ -1,12 +1,26 @@
 import React from 'react';
 import {GlobalStyle} from "../TopMenu";
 import { ReactComponent as ArrowUpSVG } from '../icons/arrowUp.svg';
-import {Layout, Content, StyledBurgerSortSVG, SearchAndSortContainer, SearchInputContainer, SortInputContainer, SearchInput, SearchIcon, SortInput, ArrowIcon, Sidebar} from "./style";
+import {
+    Layout,
+    Content,
+    StyledBurgerSortSVG,
+    SearchAndSortContainer,
+    SearchInputContainer,
+    SortInputContainer,
+    SearchInput,
+    SearchIcon,
+    SortInput,
+    ArrowIcon,
+    Sidebar,
+    SearchIDContainer
+} from "./style";
 import { ReactComponent as ArrowDownSVG } from '../icons/arrowDown.svg';
 import {TreeNodeData} from "./interface";
 import {ComplexContainer, TreeNode, TreeText, TreeIcon, TreeChildren, StyledCircleGreenSVG, StyledCircleFioletEmptySVG} from "./styleTree";
 import {BriefInfoText, BriefInfoTitle, BriefInfoContainer, MapAndInfoWrapper, InfoAndLegendWrapper, MapContainer, SearchLegendSVG} from "./styleMapAndInfo";
 import {BriefInfoProps, BriefInfoData} from './interface'
+
 
 const BriefInfo: React.FC<BriefInfoProps> = ({ info }) => {
     return (
@@ -160,6 +174,10 @@ const MainMenu = () => {
                         <Tree data={treeData} />
                     </Sidebar>
                     <MapAndInfoWrapper>
+                        <SearchIDContainer>
+                            <SearchInput style={{width: "100px"}} placeholder="Поиск по ID" />
+                            <SearchIcon />
+                        </SearchIDContainer>
                         <MapContainer>
 
                         </MapContainer>

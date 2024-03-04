@@ -14,8 +14,8 @@ export const BriefInfoContainer = styled.div`
   background-color: #F5F5F7;
   border-radius: 10px;
   display: flex;
-  height: 118px;
-  width: 190px;
+  height: 130px;
+  width: 230px;
   align-items: flex-start;
   flex-direction: column;
 `;
@@ -36,8 +36,8 @@ export const BriefInfoText = styled.div`
 
 
 export const SearchLegendSVG = styled(LegendSVG)`
-  width: 260px;
-  height: 190px;
+  width: 290px;
+  height: 220px;
 `;
 
 export const MapAndInfoWrapper = styled.div`
