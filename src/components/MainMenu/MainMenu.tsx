@@ -4,7 +4,28 @@ import { ReactComponent as ArrowUpSVG } from '../icons/arrowUp.svg';
 import {Layout, Content, StyledBurgerSortSVG, SearchAndSortContainer, SearchInputContainer, SortInputContainer, SearchInput, SearchIcon, SortInput, ArrowIcon, Sidebar} from "./style";
 import { ReactComponent as ArrowDownSVG } from '../icons/arrowDown.svg';
 import {TreeNodeData} from "./interface";
-import {ComplexContainer, TreeNode, TreeText, TreeIcon, TreeChildren, StyledCircleGreenSVG, StyledCircleFioletEmptySVG} from "./style";
+import {ComplexContainer, TreeNode, TreeText, TreeIcon, TreeChildren, StyledCircleGreenSVG, StyledCircleFioletEmptySVG} from "./styleTree";
+import {BriefInfoText, BriefInfoTitle, BriefInfoContainer, MapAndInfoWrapper, InfoAndLegendWrapper, MapContainer, SearchLegendSVG} from "./styleMapAndInfo";
+import {BriefInfoProps, BriefInfoData} from './interface'
+
+const BriefInfo: React.FC<BriefInfoProps> = ({ info }) => {
+    return (
+        <BriefInfoContainer>
+            <BriefInfoTitle>Краткая справка по выделенным зонам</BriefInfoTitle>
+            {info ? (
+                <>
+                    <BriefInfoText>Зоны: {info.zoneNumbers}</BriefInfoText>
+                    <BriefInfoText>Тип: {info.type}</BriefInfoText>
+                    <BriefInfoText>Статус: {info.status}</BriefInfoText>
+                </>
+            ) : (
+                <div style={{ flex: 1 }}></div>
+            )}
+        </BriefInfoContainer>
+    );
+};
+
+
 
 
 const Tree: React.FC<{ data: TreeNodeData; level?: number }> = ({ data, level = 0 }) => {
@@ -106,6 +127,19 @@ const MainMenu = () => {
         ],
     };
 
+    const [briefInfo, setBriefInfo] = React.useState<BriefInfoData | null>(null);
+
+    const fetchBriefInfo = async () => {
+
+        const response = await fetch('url');
+        const data = await response.json();
+        setBriefInfo(data);
+    };
+
+    React.useEffect(() => {
+        fetchBriefInfo();
+    }, []);
+
     return (
         <>
             <GlobalStyle/>
@@ -125,6 +159,18 @@ const MainMenu = () => {
                         </SearchAndSortContainer>
                         <Tree data={treeData} />
                     </Sidebar>
+                    <MapAndInfoWrapper>
+                        <MapContainer>
+
+                        </MapContainer>
+                        <InfoAndLegendWrapper>
+                            <BriefInfo info={briefInfo}/>
+                            <SearchLegendSVG/>
+                        </InfoAndLegendWrapper>
+                    </MapAndInfoWrapper>
+
+
+
                 </Content>
             </Layout>
         </>

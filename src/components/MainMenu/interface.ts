@@ -17,3 +17,14 @@ export interface TreeIconProps {
 export interface TreeChildrenProps {
     collapsed?: boolean;
 }
+
+
+export interface BriefInfoData {
+    zoneNumbers: string;
+    type: string;
+    status: string;
+}
+
+export interface BriefInfoProps {
+    info: BriefInfoData | null;
+}

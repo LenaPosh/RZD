@@ -1,0 +1,61 @@
+import styled from "styled-components";
+import { ReactComponent as LegendSVG } from '../icons/legend.svg';
+
+export const InfoAndLegendWrapper = styled.div`
+  display: flex;
+  gap: 10px;
+  flex-direction: row;
+  align-items: center;
+  width: 100%;
+  margin-top: auto;
+`;
+
+export const BriefInfoContainer = styled.div`
+  background-color: #F5F5F7;
+  border-radius: 10px;
+  display: flex;
+  height: 118px;
+  width: 190px;
+  align-items: flex-start;
+  flex-direction: column;
+`;
+
+export const BriefInfoTitle = styled.h4`
+  font-family: 'Inter', sans-serif;
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 8px;
+  letter-spacing: 0;
+  text-align: center;
+`;
+
+export const BriefInfoText = styled.div`
+  font-size: 8px;
+  color: #666;
+`;
+
+
+export const SearchLegendSVG = styled(LegendSVG)`
+  width: 260px;
+  height: 190px;
+`;
+
+export const MapAndInfoWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  margin-left: 20px;
+  width: 600px; 
+  height: auto;
+`;
+
+
+export const MapContainer = styled.div`
+  flex-grow: 2;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 600px;
+
+`;
