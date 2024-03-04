@@ -12,16 +12,41 @@ export const GlobalStyle = createGlobalStyle`
     padding: 0;
     width: 100%;
     overflow-x: hidden;
+
+    &::-webkit-scrollbar {
+      width: 3px !important;
+      border-radius: 20px !important;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: #f1f1f1 !important;
+      width: 3px !important;
+      border-radius: 20px !important;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.6) !important;
+      border-radius: 20px !important;
+    }
+
+    &::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.6) !important;
+      border-radius: 20px !important;
+    }
+
+    scrollbar-width: thin !important;
+    scrollbar-color: rgba(114, 112, 112, 0.3) #f1f1f1;
   }
 `;
 
 const MenuContainer = styled.header`
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   padding: 0 20px;
   height: 60px;
   background-color: #ffffff;
+  width: 100vw;
 `;
 
 const LogoAndBurgerContainer = styled.div`
@@ -41,13 +66,16 @@ const StyledLogoSVG = styled(LogoSVG)`
   height: 60px;
 `;
 
+
 const RightContainer = styled.div`
   display: flex;
   align-items: center;
+  margin-left: auto;
   margin-right: 20px;
 `;
 
-const StyledSearchSVG = styled(SearchSVG)`
+
+export const StyledSearchSVG = styled(SearchSVG)`
   width: 30px;
   height: 20px;
 `;
@@ -56,7 +84,7 @@ const SearchBarContainer = styled.div`
   position: relative;
   display: flex;
   align-items: center;
-  margin-right: 25px;
+  margin-right: 50px;
 `;
 
 
@@ -88,23 +116,27 @@ const StyledEmailSVG = styled(EmailSVG)`
 
 const TopMenu: React.FC = () => {
     return (
-        <MenuContainer>
-            <LogoAndBurgerContainer>
-                <StyledBurgerSVG />
-                <StyledLogoSVG />
-            </LogoAndBurgerContainer>
-            <RightContainer>
-                <SearchBarContainer>
-                    <SearchBar type="text" />
+        <>
+            <GlobalStyle/>
+            <MenuContainer>
+                <LogoAndBurgerContainer>
+                    <StyledBurgerSVG />
+                    <StyledLogoSVG />
+                </LogoAndBurgerContainer>
+                <RightContainer>
+                    <SearchBarContainer>
+                        <SearchBar type="text" />
+                        <Icon>
+                            <StyledSearchSVG />
+                        </Icon>
+                    </SearchBarContainer>
                     <Icon>
-                        <StyledSearchSVG />
+                        <StyledEmailSVG />
                     </Icon>
-                </SearchBarContainer>
-                <Icon>
-                    <StyledEmailSVG />
-                </Icon>
-            </RightContainer>
-        </MenuContainer>
+                </RightContainer>
+            </MenuContainer>
+        </>
+
     );
 };
 
