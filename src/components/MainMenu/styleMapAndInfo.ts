@@ -21,6 +21,16 @@ export const BriefInfoContainer = styled.div`
   justify-content: center;
 `;
 
+export const BriefInfoContent = styled.div`
+  background-color: rgba(255, 255, 255, 0.77);
+  margin-bottom: 10px;
+  border-radius: 8px;
+  height: 145px;
+  width: 200px;
+
+`;
+
+
 export const BriefInfoTitle = styled.h4`
   font-family: 'Inter', sans-serif;
   font-size: 9px;
