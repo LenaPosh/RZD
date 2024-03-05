@@ -21,9 +21,41 @@ import {ComplexContainer, TreeNode, TreeText, TreeIcon, TreeChildren, StyledCirc
 import {BriefInfoText, BriefInfoTitle, BriefInfoContainer, MapAndInfoWrapper, InfoAndLegendWrapper, MapContainer, SearchLegendSVG, BriefInfoContent} from "./styleMapAndInfo";
 import {BriefInfoProps, BriefInfoData} from './interface'
 import {ComplexData} from "./interface";
+import { ReactComponent as TwoDSVG } from '../icons/2D.svg';
+import { ReactComponent as ThreeDSVG } from '../icons/3D.svg';
+import { ReactComponent as PlusSVG } from '../icons/plus.svg';
+import { ReactComponent as MinusSVG } from '../icons/minus.svg';
+import { ReactComponent as DistanceSVG } from '../icons/distance.svg';
+import styled from "styled-components";
 
 const BRIEF_INFO_URL = "";
 const TREE_DATA_URL = "";
+
+const ZoomContainer = styled.div`
+  position: absolute;
+  top: 10px; 
+  right: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: #F5F5F7;
+  border-radius: 10px;
+  padding: 10px;
+  gap: 10px;
+`;
+
+const ModeSwitchContainer = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  position: absolute;
+  bottom: 210px;
+  right: 10px;
+`;
+
+const IconWrapper = styled.div`
+  cursor: pointer;
+`;
 
 const BriefInfo: React.FC<BriefInfoProps> = ({ info }) => {
     return (
@@ -178,6 +210,25 @@ const MainMenu = () => {
         fetchComplexData();
     }, []);
 
+    const handleZoomIn = () => {
+        console.log("Увеличить масштаб карты");
+    };
+
+    const handleZoomOut = () => {
+        console.log("Уменьшить масштаб карты");
+    };
+
+    const handleSwitchTo2D = () => {
+        console.log("Переключиться в 2D режим");
+    };
+
+    const handleSwitchTo3D = () => {
+        console.log("Переключиться в 3D режим");
+    };
+
+
+
+
     return (
         <>
             <GlobalStyle/>
@@ -210,9 +261,31 @@ const MainMenu = () => {
                             <BriefInfo info={briefInfo}/>
                             <SearchLegendSVG/>
                         </InfoAndLegendWrapper>
+
+
                     </MapAndInfoWrapper>
+                    <ZoomContainer>
+                        <IconWrapper  onClick={handleZoomIn}>
+                            <PlusSVG/>
+                        </IconWrapper>
+                        <IconWrapper onClick={handleZoomOut}>
+                            <MinusSVG />
+                        </IconWrapper>
+                        <IconWrapper>
+                            <DistanceSVG/>
+                        </IconWrapper>
 
+                    </ZoomContainer>
 
+                    <ModeSwitchContainer>
+                        <IconWrapper onClick={handleSwitchTo2D}>
+                            <TwoDSVG />
+                        </IconWrapper>
+                        <IconWrapper onClick={handleSwitchTo3D}>
+                            <ThreeDSVG />
+                        </IconWrapper>
+
+                    </ModeSwitchContainer>
 
                 </Content>
             </Layout>
