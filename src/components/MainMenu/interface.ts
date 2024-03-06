@@ -1,13 +1,20 @@
 export interface TreeNodeData {
-    id: number;
+    id: number | string;
     name: string;
     isPseudoElement?: boolean;
+    isFloor: boolean;
     children?: TreeNodeData[];
+
 }
 
 export interface TreeNodeProps {
     isChild?: boolean;
     level: number;
+    onFloorClick: (floorId: number | string, node?: TreeNodeData) => void;
+    isActive?: boolean;
+    isParentActive: boolean;
+    activeIds: (number | string)[];
+    isFloor: boolean;
 }
 
 export interface TreeIconProps {
@@ -17,6 +24,16 @@ export interface TreeIconProps {
 export interface TreeChildrenProps {
     collapsed?: boolean;
 }
+
+export interface TreeProps {
+    data: TreeNodeData;
+    level?: number;
+    onFloorClick: (floorId: number | string, node?: TreeNodeData) => void;
+    activeFloorId: number | string | null;
+    isParentActive: boolean;
+    activeIds: (number | string)[];
+}
+
 
 
 export interface BriefInfoData {

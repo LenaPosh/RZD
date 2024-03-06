@@ -11,7 +11,7 @@ export const TreeIcon = styled.span<TreeIconProps>`
 
 export const TreeText = styled.span<TreeNodeProps>`
   font-family: 'Inter', sans-serif;
-  font-size: ${props => props.level === 0 ? '18px' : '15px'};
+  font-size: ${props => props.level === 0 ? '17px' : '14px'};
   font-weight: ${props => props.level === 0 ? 600 : 400};
   line-height: 18px;
   letter-spacing: 0;
@@ -47,14 +47,32 @@ export const TreeNode = styled.div<TreeNodeProps>`
   cursor: pointer;
   padding: 5px;
   border-radius: 5px;
-  background-color: ${props => props.level > 0 ? 'transparent' : '#F5F5F7'};
-  margin-left: ${props => props.level * 20}px;
+  background-color: ${props => props.isActive ? 'white' : '#F2F4F6'};
+  color: ${props => (props.isActive && props.isFloor) ? '#5FC15D' : 'black'};
+  margin-left: ${props => props.level * 10}px;
+  font-weight: ${props => props.isFloor ? 'bold' : 'normal'};
 
-  &:hover {
-    background-color: ${props => props.level > 0 ? 'transparent' : '#F5F5F7'};
+  &:before {
+    content: '';
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: ${props => (props.isFloor ? (props.isActive ? '#5FC15D' : 'grey') : 'transparent')};
+
+    margin-right: 5px;
+    
   }
-  
+
+  // &:hover {
+  //   background-color: ${props => props.isActive || props.isParentActive ? 'white' : '#E8E8E8'};
+  // }
+
 `;
+
+
+
+
 
 export const ComplexContainer = styled.div`
   background-color: #F5F5F7;
@@ -87,3 +105,5 @@ export const ComplexContainer = styled.div`
   scrollbar-width: thin !important;
   scrollbar-color: rgba(114, 112, 112, 0.15) #f1f1f1 !important;
 `;
+
+
