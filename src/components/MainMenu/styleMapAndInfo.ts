@@ -8,6 +8,7 @@ export const InfoAndLegendWrapper = styled.div`
   align-items: center;
   width: 100%;
   margin-top: auto;
+  z-index: 10;
 `;
 
 export const BriefInfoContainer = styled.div`
@@ -55,11 +56,11 @@ export const SearchLegendSVG = styled(LegendSVG)`
 export const MapAndInfoWrapper = styled.div`
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   justify-content: flex-start;
   margin-left: 20px;
-  width: 600px; 
-  height: auto;
+  width: 100%;
+
 `;
 
 
@@ -68,6 +69,7 @@ export const MapContainer = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 600px;
+  width: 100%;
+  height: 80%;
 
 `;

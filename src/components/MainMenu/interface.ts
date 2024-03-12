@@ -11,7 +11,7 @@ export interface TreeNodeProps {
     isChild?: boolean;
     level: number;
     onFloorClick: (floorId: number | string, node?: TreeNodeData) => void;
-    isActive?: boolean;
+    $isActive?: boolean;
     isParentActive: boolean;
     activeIds: (number | string)[];
     isFloor: boolean;

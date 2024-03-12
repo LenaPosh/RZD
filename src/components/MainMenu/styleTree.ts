@@ -47,8 +47,8 @@ export const TreeNode = styled.div<TreeNodeProps>`
   cursor: pointer;
   padding: 5px;
   border-radius: 5px;
-  background-color: ${props => props.isActive ? 'white' : '#F2F4F6'};
-  color: ${props => (props.isActive && props.isFloor) ? '#5FC15D' : 'black'};
+  background-color: ${props => props.$isActive ? 'white' : '#F2F4F6'};
+  color: ${props => (props.$isActive && props.isFloor) ? '#5FC15D' : 'black'};
   margin-left: ${props => props.level * 10}px;
   font-weight: ${props => props.isFloor ? 'bold' : 'normal'};
 
@@ -58,14 +58,14 @@ export const TreeNode = styled.div<TreeNodeProps>`
     width: 6px;
     height: 6px;
     border-radius: 50%;
-    background-color: ${props => (props.isFloor ? (props.isActive ? '#5FC15D' : 'grey') : 'transparent')};
+    background-color: ${props => (props.isFloor ? (props.$isActive ? '#5FC15D' : 'grey') : 'transparent')};
 
     margin-right: 5px;
     
   }
 
   // &:hover {
-  //   background-color: ${props => props.isActive || props.isParentActive ? 'white' : '#E8E8E8'};
+  //   background-color: ${props => props.$isActive || props.isParentActive ? 'white' : '#E8E8E8'};
   // }
 
 `;
@@ -107,3 +107,8 @@ export const ComplexContainer = styled.div`
 `;
 
 
+export const TreeGroupContainer = styled.div<{ $isActive: boolean }>`
+  border-radius: 5px;
+  background-color: ${(props) => (props.$isActive ? 'white' : 'transparent')};
+  padding: 5px;
+`;

@@ -13,78 +13,26 @@ import {
     SortInput,
     ArrowIcon,
     Sidebar,
-    SearchIDContainer
+    SearchIDContainer, ZoomContainer, ModeSwitchContainer, IconWrapper
 } from "./style";
 import { ReactComponent as ArrowDownSVG } from '../icons/arrowDown.svg';
 import {TreeNodeData, TreeProps} from "./interface";
-import {ComplexContainer, TreeNode, TreeText, TreeIcon, TreeChildren, StyledCircleGreenSVG, StyledCircleFioletEmptySVG} from "./styleTree";
-import {BriefInfoText, BriefInfoTitle, BriefInfoContainer, MapAndInfoWrapper, InfoAndLegendWrapper, MapContainer, SearchLegendSVG, BriefInfoContent} from "./styleMapAndInfo";
-import {BriefInfoProps, BriefInfoData} from './interface'
+import {ComplexContainer, TreeNode, TreeText, TreeIcon, TreeChildren, StyledCircleGreenSVG, StyledCircleFioletEmptySVG, TreeGroupContainer} from "./styleTree";
+import {MapAndInfoWrapper, InfoAndLegendWrapper, MapContainer, SearchLegendSVG} from "./styleMapAndInfo";
+import {BriefInfoData} from './interface'
 import {ComplexData} from "./interface";
 import { ReactComponent as TwoDSVG } from '../icons/2D.svg';
 import { ReactComponent as ThreeDSVG } from '../icons/3D.svg';
 import { ReactComponent as PlusSVG } from '../icons/plus.svg';
 import { ReactComponent as MinusSVG } from '../icons/minus.svg';
 import { ReactComponent as DistanceSVG } from '../icons/distance.svg';
-import styled from "styled-components";
+import {BRIEF_INFO_URL} from "./BriefInfo";
+import {BriefInfo} from "./BriefInfo";
+import CanvasComponent from "./CanvasComponent";
 
-const BRIEF_INFO_URL = "";
+
 const TREE_DATA_URL = "";
 
-const ZoomContainer = styled.div`
-  position: absolute;
-  top: 10px; 
-  right: 10px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  background-color: #F5F5F7;
-  border-radius: 10px;
-  padding: 10px;
-  gap: 10px;
-`;
-
-const ModeSwitchContainer = styled.div`
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  position: absolute;
-  bottom: 210px;
-  right: 10px;
-`;
-
-const IconWrapper = styled.div`
-  cursor: pointer;
-`;
-
-const BriefInfo: React.FC<BriefInfoProps> = ({ info }) => {
-    return (
-        <BriefInfoContainer>
-            <BriefInfoTitle>Краткая справка по выделенным зонам</BriefInfoTitle>
-            <BriefInfoContent>
-                {info ? (
-                    <>
-                        <BriefInfoText>Зоны: {info.zoneNumbers}</BriefInfoText>
-                        <BriefInfoText>Тип: {info.type}</BriefInfoText>
-                        <BriefInfoText>Статус: {info.status}</BriefInfoText>
-                        <BriefInfoText>Измеритель: {info.measurement}</BriefInfoText>
-                        <BriefInfoText>Единицы измерения: {info.measurementUnit}</BriefInfoText>
-                        <BriefInfoText>Подразделение-пользователь: {info.userCategory}</BriefInfoText>
-                    </>
-                ) : (
-                    <div style={{ flex: 1 }}></div>
-                )}
-            </BriefInfoContent>
-
-        </BriefInfoContainer>
-    );
-};
-
-const TreeGroupContainer = styled.div<{ isActive: boolean }>`
-  border-radius: 5px;
-  background-color: ${(props) => (props.isActive ? 'white' : 'transparent')};
-  padding: 5px;
-`;
 
 
 const Tree: React.FC<TreeProps> = ({ data, level = 0, onFloorClick, activeFloorId, isParentActive, activeIds }) => {
@@ -105,13 +53,9 @@ const Tree: React.FC<TreeProps> = ({ data, level = 0, onFloorClick, activeFloorI
         setCollapsed(!collapsed);
         onFloorClick(data.id, data);
     };
-
-
-
     return (
-
         <ComplexContainer>
-            <TreeGroupContainer isActive={activeIds.includes(data.id)}>
+            <TreeGroupContainer $isActive={activeIds.includes(data.id)}>
             {/*<TreeGroupContainer*/}
             {/*    isActive={*/}
             {/*        activeIds.includes(data.id) ||*/}
@@ -122,7 +66,7 @@ const Tree: React.FC<TreeProps> = ({ data, level = 0, onFloorClick, activeFloorI
                     isFloor={data.isFloor}
                     level={level}
                     onClick={handleToggle}
-                    isActive={activeIds.includes(data.id)}
+                    $isActive={activeIds.includes(data.id)}
                     isParentActive={isParentActive || activeIds.includes(data.id)}
                     activeIds={activeIds}
                     onFloorClick={onFloorClick}
@@ -262,12 +206,6 @@ const MainMenu = () => {
                         ],
                     },
 
-                    {
-                        id: 8,
-                        name: 'Подэлемент 2 участка #1',
-                        isFloor: false,
-                        children: []
-                    },
                 ],
             },
             {
@@ -379,9 +317,11 @@ const MainMenu = () => {
                         <SearchIDContainer>
                             <SearchInput placeholder="Поиск по ID" />
                         </SearchIDContainer>
-                        <MapContainer>
+                        {/*<MapContainer>*/}
 
-                        </MapContainer>
+                            <CanvasComponent/>
+
+                        {/*</MapContainer>*/}
                         <InfoAndLegendWrapper>
                             <BriefInfo info={briefInfo}/>
                             <SearchLegendSVG/>

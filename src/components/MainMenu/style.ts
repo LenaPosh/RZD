@@ -106,6 +106,31 @@ export const ArrowIcon = styled(ArrowSVG)`
   height: 20px;
 `;
 
+export const ZoomContainer = styled.div`
+  position: absolute;
+  top: 10px; 
+  right: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: #F5F5F7;
+  border-radius: 10px;
+  padding: 5px;
+  gap: 5px;
+`;
+
+export const ModeSwitchContainer = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  position: absolute;
+  bottom: 210px;
+  right: 10px;
+`;
+
+export const IconWrapper = styled.div`
+  cursor: pointer;
+`;
 
 
 
