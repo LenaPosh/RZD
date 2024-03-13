@@ -6,11 +6,19 @@ interface Point {
     x: number;
     y: number;
 }
+interface RectangleData {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+}
 
 const CanvasComponent = () => {
     const canvasRef = useRef<HTMLDivElement | null>(null);
     const [app, setApp] = useState<Application | null>(null);
     const graphicsRef = useRef<Graphics | null>(null);
+    const [rectangles, setRectangles] = useState<RectangleData[]>([])
+    const backgroundRef = useRef<Sprite | null>(null);
 
     useEffect(() => {
         const newApp = new Application({
@@ -39,6 +47,9 @@ const CanvasComponent = () => {
             background.interactive = true;
 
             graphicsRef.current = new Graphics();
+
+            backgroundRef.current = background;
+
             newApp.stage.addChild(graphicsRef.current);
 
             setApp(newApp);
@@ -52,36 +63,41 @@ const CanvasComponent = () => {
     }, []);
 
     useEffect(() => {
-        if (!app) return;
+        if (!app || !backgroundRef.current) return;
 
-        const background = app.stage.children[0] as Sprite;
+        const background = backgroundRef.current;
         let startPoint: Point | null = null;
-        let isDrawing = false;
+        let currentRectangle: Graphics | null = null;
 
         const onPointerDown = (event: any) => {
             const { x, y } = event.data.global;
             startPoint = { x, y };
-            isDrawing = true;
+            currentRectangle = new Graphics();
+            app.stage.addChild(currentRectangle);
         };
         const onPointerMove = (event: any) => {
-            if (!startPoint || !isDrawing || !graphicsRef.current) return;
+            if (!startPoint || !currentRectangle) return;
 
             const { x, y } = event.data.global;
             const width = x - startPoint.x;
             const height = y - startPoint.y;
 
-            graphicsRef.current.clear();
-            graphicsRef.current.stroke({width: 2, color: 0xFF0000});
-            graphicsRef.current.rect(startPoint.x, startPoint.y, width, height);
+            currentRectangle.clear();
+            currentRectangle.stroke({width: 2, color: 0xFF0000});
+            currentRectangle.rect(startPoint.x, startPoint.y, width, height);
         };
 
         const onPointerUp = (event: any) => {
-            if (!startPoint || !graphicsRef.current) return;
+            if (!startPoint || !currentRectangle) return;
 
-            isDrawing = false;
+            const { x, y } = event.data.global;
+            const width = x - startPoint.x;
+            const height = y - startPoint.y;
+
+            setRectangles([...rectangles, { x: startPoint.x, y: startPoint.y, width, height }]);
             startPoint = null;
+            currentRectangle = null;
         }
-
 
         background.on('pointerdown', onPointerDown);
         background.on('pointermove', onPointerMove)
@@ -92,88 +108,28 @@ const CanvasComponent = () => {
             background.off('pointermove', onPointerMove)
             background.off('pointerup', onPointerUp);
         };
-    }, [app]);
+    }, [app, rectangles]);
+
+    useEffect(() => {
+        if (!app) return;
+
+        if (graphicsRef.current) {
+            graphicsRef.current.clear();
+        } else {
+            graphicsRef.current = new Graphics();
+            app.stage.addChild(graphicsRef.current);
+        }
+
+        rectangles.forEach(rect => {
+            graphicsRef.current?.stroke({width: 2, color: 0xFF0000}).rect(rect.x, rect.y, rect.width, rect.height);
+        });
+    }, [rectangles]);
 
     return <div ref={canvasRef} style={{ width: '100%', height: '100%', overflow: 'hidden' }} />;
 };
 
 export default CanvasComponent;
 
-
-// import React, {useCallback, useEffect, useRef, useState} from 'react';
-// import {Application, Graphics, Sprite, Assets, Rectangle, Texture} from 'pixi.js';
-// import imagePlan from './canvas.png';
-//
-// const CanvasComponent = () => {
-//     const canvasRef = useRef<HTMLDivElement>(null);
-//     const [newApp, setNewApp] = useState<Application | null>(null);
-//     const initializedRef = useRef(false);
-//     const [rectangles, setRectangles] = useState<Rectangle[]>([]);
-//
-//     useEffect(() => {
-//         if (!initializedRef.current) {
-//             initializedRef.current = true;
-//             console.log('Инициализация PIXI app');
-//             const initApp = async () => {
-//                 const app = new Application();
-//
-//                 await app.init({
-//                     // background: 0x1099bb,
-//                     resizeTo: window,
-//                     autoStart: false,
-//                 })
-//                 if (canvasRef.current) {
-//                     canvasRef.current.appendChild(app.canvas);
-//                 }
-//
-//                 await Assets.load(imagePlan);
-//                 const texture = Texture.from(imagePlan);
-//                 // const texture = await Assets.load(imagePlan);
-//                 const background = new Sprite(texture);
-//                 background.width = app.screen.width;
-//                 background.height = app.screen.height;
-//                 app.stage.addChild(background);
-//
-//                 app.stage.interactive = true;
-//                 app.renderer.render(app.stage);
-//
-//                 setNewApp(app);
-//             };
-//
-//             initApp();
-//
-//             return () => newApp?.destroy(true);
-//         }
-//     }, []);
-//
-//     useEffect(() => {
-//         if (newApp) {
-//             newApp.stage.on('click', (event) => {
-//                 const { x, y } = event.data.global;
-//                 const width = 100;
-//                 const height = 100;
-//                 const rect = new Rectangle(x, y, width, height);
-//                 setRectangles([...rectangles, rect]);
-//
-//                 const graphics = new Graphics();
-//                 graphics
-//                     .rect(rect.x, rect.y, rect.width, rect.height)
-//                     .stroke({width: 2, color: 0xFF0000});
-//                 newApp.stage.addChild(graphics);
-//                 newApp.renderer.render(newApp.stage);
-//             });
-//         }
-//     }, [newApp, rectangles]);
-//
-//     return (
-//         <>
-//             <div ref={canvasRef} style={{ width: '100%', height: '100%', overflow: 'hidden' }} />
-//         </>
-//
-//     )
-// };
-//
-// export default CanvasComponent;
 
 
 

@@ -17,7 +17,7 @@ export const Sidebar = styled.div`
   width: 300px;
   background-color: #FFF;
   box-sizing: border-box;
-  overflow-y: auto;
+  overflow-y: hidden;
   flex-shrink: 0;
 `;
 
