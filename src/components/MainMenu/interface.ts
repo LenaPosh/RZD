@@ -1,3 +1,5 @@
+import React from "react";
+
 export interface TreeNodeData {
     id: number | string;
     name: string;
@@ -32,6 +34,7 @@ export interface TreeProps {
     activeFloorId: number | string | null;
     isParentActive: boolean;
     activeIds: (number | string)[];
+    renderActions: (node: TreeNodeData) => React.ReactNode;
 }
 
 

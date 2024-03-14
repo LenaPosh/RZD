@@ -112,3 +112,56 @@ export const TreeGroupContainer = styled.div<{ $isActive: boolean }>`
   background-color: ${(props) => (props.$isActive ? 'white' : 'transparent')};
   padding: 5px;
 `;
+
+export const Button = styled.button`
+  padding: 10px 15px;
+  font-size: 10px;
+  color: white;
+  background-color: #5FC15D;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-right: 5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+
+  &:hover {
+    background-color: #4eb14e;
+  }
+
+  &:focus {
+    outline: none;
+  }
+
+  &:active {
+    background-color: #449644;
+  }
+
+  &:last-child {
+    margin-right: 0;
+  }
+`;
+
+export const ButtonsContainer = styled.div`
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 4px;
+  margin-top: 4px;
+  background-color: #F8F8F8;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+
+  & > button {
+    padding: 8px 10px;
+    border: none;
+    border-radius: 4px;
+    background-color: #5FC15D;
+    color: white;
+    font-size: 11px;
+    cursor: pointer;
+
+    &:hover {
+      background-color: #4eb14e;
+    }
+  }
+`;

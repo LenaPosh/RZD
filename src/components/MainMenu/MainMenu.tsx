@@ -17,10 +17,10 @@ import {
 } from "./style";
 import { ReactComponent as ArrowDownSVG } from '../icons/arrowDown.svg';
 import {TreeNodeData, TreeProps} from "./interface";
-import {ComplexContainer, TreeNode, TreeText, TreeIcon, TreeChildren, StyledCircleGreenSVG, StyledCircleFioletEmptySVG, TreeGroupContainer} from "./styleTree";
+import {ComplexContainer, TreeNode, TreeText, TreeIcon, TreeChildren, StyledCircleGreenSVG, StyledCircleFioletEmptySVG, TreeGroupContainer, Button, ButtonsContainer} from "./styleTree";
 import {MapAndInfoWrapper, InfoAndLegendWrapper, MapContainer, SearchLegendSVG} from "./styleMapAndInfo";
 import {BriefInfoData} from './interface'
-import {ComplexData} from "./interface";
+// import {ComplexData} from "./interface";
 import { ReactComponent as TwoDSVG } from '../icons/2D.svg';
 import { ReactComponent as ThreeDSVG } from '../icons/3D.svg';
 import { ReactComponent as PlusSVG } from '../icons/plus.svg';
@@ -31,22 +31,45 @@ import {BriefInfo} from "./BriefInfo";
 import CanvasComponent from "./CanvasComponent";
 
 
-const TREE_DATA_URL = "";
+
+// const TREE_DATA_URL = "";
+
+export interface ZoneData {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    color?: string;
+    id?: number;
+}
 
 
 
-const Tree: React.FC<TreeProps> = ({ data, level = 0, onFloorClick, activeFloorId, isParentActive, activeIds }) => {
-    console.log("Рендер узла:", data.id, "Активные ID:", activeIds);
+const Tree: React.FC<TreeProps> = ({
+
+                                       data,
+                                       level = 0,
+                                       onFloorClick,
+                                       activeFloorId,
+                                       isParentActive,
+                                       activeIds,
+                                       renderActions
+                                   }) => {
+
+    // console.log("Рендер узла:", data.id, "Активные ID:", activeIds);
     const [collapsed, setCollapsed] = React.useState(true);
     const isPseudoElement = data.isPseudoElement || level > 1;
     const hasChildren = !isPseudoElement && !!data.children && data.children.length > 0;
 
     const handleToggle = () => {
-        if (data.isFloor) {
+        const isZoneOrPseudoElement = !data.isFloor && (data.isPseudoElement || level > 1);
+
+        if (data.isFloor || isZoneOrPseudoElement) {
             onFloorClick(data.id, data);
         }
         setCollapsed(!collapsed);
     };
+    console.log(data.name, data.isPseudoElement);
 
     const handleArrowClick = (e: React.MouseEvent<HTMLElement>) => {
         e.stopPropagation();
@@ -72,19 +95,23 @@ const Tree: React.FC<TreeProps> = ({ data, level = 0, onFloorClick, activeFloorI
                     onFloorClick={onFloorClick}
                 >
                     {level > 0 && !data.isFloor && (level === 1 ? <StyledCircleGreenSVG/> : <StyledCircleFioletEmptySVG/>)}
-                    <TreeText
-                        level={level}
-                        isFloor={data.isFloor}
-                        isParentActive={isParentActive}
-                        activeIds={activeIds}
-                        onFloorClick={onFloorClick}
-                    >
-                        {data.name}
-                    </TreeText>
+                    <div style={{ flex: 1 }}>
+                        <TreeText
+                            level={level}
+                            isFloor={data.isFloor}
+                            isParentActive={isParentActive}
+                            activeIds={activeIds}
+                            onFloorClick={onFloorClick}
+                        >
+                            {data.name}
+                        </TreeText>
+                        {data.isPseudoElement && renderActions && renderActions(data)}
+                    </div>
                     <TreeIcon hasChildren={hasChildren} onClick={handleArrowClick}>
                         {hasChildren && !isPseudoElement && (collapsed ? <ArrowUpSVG /> : <ArrowDownSVG />)}
                     </TreeIcon>
                 </TreeNode>
+
                 {!collapsed && data.children && (
                     <TreeChildren collapsed={collapsed}>
                         {data.children.map((child) => (
@@ -96,6 +123,7 @@ const Tree: React.FC<TreeProps> = ({ data, level = 0, onFloorClick, activeFloorI
                                 activeFloorId={activeFloorId}
                                 isParentActive={isParentActive || data.id === activeFloorId}
                                 activeIds={activeIds}
+                                renderActions={renderActions}
                             />
                         ))}
 
@@ -112,9 +140,18 @@ const Tree: React.FC<TreeProps> = ({ data, level = 0, onFloorClick, activeFloorI
 const MainMenu = () => {
     const [activeFloor, setActiveFloor] = useState<number | string | null>(null);
     const [activeIds, setActiveIds] = useState<(number | string)[]>([]);
+    const [isDrawingMode, setIsDrawingMode] = useState(false)
+    const [activeNode, setActiveNode] = useState<TreeNodeData | null>(null);
+    const [currentZoneData, setCurrentZoneData] = useState<ZoneData | null>(null);
+    const [rectangles, setRectangles] = useState<ZoneData[]>([]);
+    const [activeZoneId, setActiveZoneId] = useState<number | null>(null);
 
     const handleFloorClick = (floorId: number | string, node?: TreeNodeData): void => {
+        console.log("Выбран узел:", node);
+        console.log("Обновление activeNode до:", node);
         setActiveFloor(floorId);
+        setActiveNode(node ? node : null);
+        console.log("Вызван setActiveNode с:", node ? node : null);
 
         let newActiveIds = [floorId];
         if (node && node.children && node.children.length > 0) {
@@ -124,11 +161,35 @@ const MainMenu = () => {
     };
 
 
+    const handleTempRectangleChange = (newRect: ZoneData | null) => {
+        setCurrentZoneData(newRect);
+    };
+
+
+
+    const handlePlaceZone = () => {
+        console.log("Разместить зону", activeNode);
+        setIsDrawingMode(true);
+    };
+
+
+    const handleSaveZone = () => {
+        if (currentZoneData) {
+            console.log("Сохранить зону", currentZoneData);
+            const updatedZones = [...rectangles, currentZoneData];
+            localStorage.setItem('savedZones', JSON.stringify(updatedZones));
+            setRectangles(updatedZones);
+            setCurrentZoneData(null);
+        }
+    };
+
+    const handleZoneClick = (zoneId: number | null) => {
+        setActiveZoneId(zoneId);
+    };
 
 
     const findAllChildrenIds = (node: TreeNodeData, ids: (number | string)[] = []): (number | string)[] => {
 
-        console.log(`Добавление ID узла: ${node.id}. Текущий список ID:`, ids);
         ids.push(node.id);
         node.children?.forEach(child => findAllChildrenIds(child, ids));
         return ids;
@@ -156,6 +217,7 @@ const MainMenu = () => {
                     {
                         id: 6,
                         name: 'Подэлемент 2 участка #1',
+                        isPseudoElement: true,
                         isFloor: false,
                         children: []
                     },
@@ -175,12 +237,14 @@ const MainMenu = () => {
                             {
                                 id: 13,
                                 name: 'Зона #1',
+                                isPseudoElement: true,
                                 isFloor: false,
                                 children: []
                             },
                             {
                                 id: 14,
                                 name: 'Зона #2',
+                                isPseudoElement: true,
                                 isFloor: false,
                                 children: []
                             },
@@ -194,12 +258,14 @@ const MainMenu = () => {
                             {
                                 id: 13,
                                 name: 'Зона #398: Земля под вокзал дальнего следования',
+                                isPseudoElement: true,
                                 isFloor: false,
                                 children: []
                             },
                             {
                                 id: 14,
                                 name: 'Зона #398: Земля под вокзал дальнего следования',
+                                isPseudoElement: true,
                                 isFloor: false,
                                 children: []
                             },
@@ -223,12 +289,14 @@ const MainMenu = () => {
                     {
                         id: 11,
                         name: 'Подэлемент 2 участка #1',
+                        isPseudoElement: true,
                         isFloor: false,
                         children: []
                     },
                     {
                         id: 12,
                         name: 'Подэлемент 3 участка #1',
+                        isPseudoElement: true,
                         isFloor: false,
                         children: []
                     },
@@ -309,6 +377,22 @@ const MainMenu = () => {
                             activeFloorId={activeFloor}
                             isParentActive={false}
                             activeIds={activeIds}
+
+                            renderActions={(node) => {
+                                console.log("Активный узел:", activeNode);
+                                console.log("Текущий узел:", node);
+                                return (
+                                    node.id === activeNode?.id ? (
+                                        <ButtonsContainer>
+                                            <Button onClick={handlePlaceZone}>Разместить зону</Button>
+                                            <Button onClick={handleSaveZone}>Сохранить</Button>
+
+                                        </ButtonsContainer>
+                                    ) : null
+                                );
+                            }}
+
+
                         />
                         {/*{complexData ? <Tree data={complexData} /> : "Loading..."}*/}
 
@@ -319,7 +403,15 @@ const MainMenu = () => {
                         </SearchIDContainer>
                         {/*<MapContainer>*/}
 
-                            <CanvasComponent/>
+                        <CanvasComponent
+                            onZoneClick={handleZoneClick}
+                            rectangles={rectangles}
+                            setRectangles={setRectangles}
+                            onTempRectangleChange={handleTempRectangleChange}
+
+                        />
+
+
 
                         {/*</MapContainer>*/}
                         <InfoAndLegendWrapper>
