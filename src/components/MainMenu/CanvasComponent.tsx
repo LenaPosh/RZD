@@ -35,7 +35,7 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({rectangles, setRectang
     const [selectedZoneName, setSelectedZoneName] = useState<string | null>(null);
 
 
-
+// eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
         const newApp = new Application();
 
@@ -73,7 +73,7 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({rectangles, setRectang
                 app.destroy(true);
             }
         };
-    }, [app]);
+    }, []);
 
     useEffect(() => {
         const handleClick = (zoneId: number | null) => {
