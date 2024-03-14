@@ -71,8 +71,8 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({rectangles, setRectang
         })();
 
         return () => {
-            if (app) {
-                app.destroy(true);
+            if (newApp) {
+                newApp.destroy(true);
             }
         };
     }, []);

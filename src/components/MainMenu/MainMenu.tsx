@@ -18,7 +18,7 @@ import {
 import { ReactComponent as ArrowDownSVG } from '../icons/arrowDown.svg';
 import {TreeNodeData, TreeProps} from "./interface";
 import {ComplexContainer, TreeNode, TreeText, TreeIcon, TreeChildren, StyledCircleGreenSVG, StyledCircleFioletEmptySVG, TreeGroupContainer, Button, ButtonsContainer} from "./styleTree";
-import {MapAndInfoWrapper, InfoAndLegendWrapper, MapContainer, SearchLegendSVG} from "./styleMapAndInfo";
+import {MapAndInfoWrapper, InfoAndLegendWrapper, SearchLegendSVG} from "./styleMapAndInfo";
 import {BriefInfoData} from './interface'
 // import {ComplexData} from "./interface";
 import { ReactComponent as TwoDSVG } from '../icons/2D.svg';
@@ -146,7 +146,7 @@ const MainMenu = () => {
     const [currentZoneData, setCurrentZoneData] = useState<ZoneData | null>(null);
     const [rectangles, setRectangles] = useState<ZoneData[]>([]);
     const [activeZoneId, setActiveZoneId] = useState<number | null>(null);
-    const [selectedZoneName, setSelectedZoneName] = useState<string | null>(null);
+    const [, setSelectedZoneName] = useState<string | null>(null);
 
 
     const handleFloorClick = (floorId: number | string, node?: TreeNodeData): void => {
@@ -424,7 +424,6 @@ const MainMenu = () => {
                         <SearchIDContainer>
                             <SearchInput placeholder="Поиск по ID" />
                         </SearchIDContainer>
-                        {/*<MapContainer>*/}
 
                         <CanvasComponent
                             onZoneClick={handleZoneClick}
@@ -438,7 +437,6 @@ const MainMenu = () => {
 
 
 
-                        {/*</MapContainer>*/}
                         <InfoAndLegendWrapper>
                             <BriefInfo info={briefInfo}/>
                             <SearchLegendSVG/>
