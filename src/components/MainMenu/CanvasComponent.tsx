@@ -185,6 +185,7 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({rectangles, setRectang
             }
         });
 
+
         const activeRect = activeZoneId !== null ? rectangles.find(rect => rect.id === activeZoneId) : undefined;
         if (activeRect && activeRect.name) {
             setSelectedZoneName(activeRect.name);
