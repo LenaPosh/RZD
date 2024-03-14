@@ -40,7 +40,8 @@ export interface ZoneData {
     width: number;
     height: number;
     color?: string;
-    id?: number;
+    id?: number | null;
+    name?: string;
 }
 
 
@@ -69,7 +70,7 @@ const Tree: React.FC<TreeProps> = ({
         }
         setCollapsed(!collapsed);
     };
-    console.log(data.name, data.isPseudoElement);
+    // console.log(data.name, data.isPseudoElement);
 
     const handleArrowClick = (e: React.MouseEvent<HTMLElement>) => {
         e.stopPropagation();
@@ -145,13 +146,15 @@ const MainMenu = () => {
     const [currentZoneData, setCurrentZoneData] = useState<ZoneData | null>(null);
     const [rectangles, setRectangles] = useState<ZoneData[]>([]);
     const [activeZoneId, setActiveZoneId] = useState<number | null>(null);
+    const [selectedZoneName, setSelectedZoneName] = useState<string | null>(null);
+
 
     const handleFloorClick = (floorId: number | string, node?: TreeNodeData): void => {
-        console.log("Выбран узел:", node);
-        console.log("Обновление activeNode до:", node);
+        // console.log("Выбран узел:", node);
+        // console.log("Обновление activeNode до:", node);
         setActiveFloor(floorId);
         setActiveNode(node ? node : null);
-        console.log("Вызван setActiveNode с:", node ? node : null);
+        // console.log("Вызван setActiveNode с:", node ? node : null);
 
         let newActiveIds = [floorId];
         if (node && node.children && node.children.length > 0) {
@@ -166,16 +169,14 @@ const MainMenu = () => {
     };
 
 
-
     const handlePlaceZone = () => {
-        console.log("Разместить зону", activeNode);
         setIsDrawingMode(true);
     };
 
 
     const handleSaveZone = () => {
         if (currentZoneData) {
-            console.log("Сохранить зону", currentZoneData);
+            console.log("Saving zone:", currentZoneData);
             const updatedZones = [...rectangles, currentZoneData];
             localStorage.setItem('savedZones', JSON.stringify(updatedZones));
             setRectangles(updatedZones);
@@ -183,9 +184,31 @@ const MainMenu = () => {
         }
     };
 
+    useEffect(() => {
+        console.log("Loading saved zones from localStorage");
+        const savedZones = JSON.parse(localStorage.getItem('savedZones') || '[]');
+        setRectangles(savedZones);
+    }, []);
+
     const handleZoneClick = (zoneId: number | null) => {
-        setActiveZoneId(zoneId);
+        const zone = zoneId !== null ? rectangles.find(rect => rect.id === zoneId) : null;
+        if (zone) {
+            setSelectedZoneName(zone.name ?? null);
+            console.log("Selected zone name:", zone.name);
+        } else {
+            setSelectedZoneName(null);
+            console.log("No selected zone name");
+        }
+        console.log("Zone clicked with ID:", zoneId);
+        if (zoneId !== activeZoneId) {
+            setActiveZoneId(zoneId);
+        }
     };
+
+
+
+
+
 
 
     const findAllChildrenIds = (node: TreeNodeData, ids: (number | string)[] = []): (number | string)[] => {
@@ -379,8 +402,8 @@ const MainMenu = () => {
                             activeIds={activeIds}
 
                             renderActions={(node) => {
-                                console.log("Активный узел:", activeNode);
-                                console.log("Текущий узел:", node);
+                                // console.log("Активный узел:", activeNode);
+                                // console.log("Текущий узел:", node);
                                 return (
                                     node.id === activeNode?.id ? (
                                         <ButtonsContainer>
@@ -405,9 +428,11 @@ const MainMenu = () => {
 
                         <CanvasComponent
                             onZoneClick={handleZoneClick}
+                            activeZoneId={activeZoneId}
                             rectangles={rectangles}
                             setRectangles={setRectangles}
                             onTempRectangleChange={handleTempRectangleChange}
+                            isDrawingMode={isDrawingMode}
 
                         />
 
@@ -417,7 +442,8 @@ const MainMenu = () => {
                         <InfoAndLegendWrapper>
                             <BriefInfo info={briefInfo}/>
                             <SearchLegendSVG/>
-                        </InfoAndLegendWrapper>
+                        </InfoAndLegendWrapper
+                        >
 
 
                     </MapAndInfoWrapper>
