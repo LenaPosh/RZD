@@ -34,9 +34,7 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({rectangles, setRectang
 
     const [selectedZoneName, setSelectedZoneName] = useState<string | null>(null);
 
-    const handleClick = (zoneId: number | null) => {
-        onZoneClick(zoneId);
-    };
+
 
     useEffect(() => {
         const newApp = new Application();
@@ -71,13 +69,16 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({rectangles, setRectang
         })();
 
         return () => {
-            if (newApp) {
-                newApp.destroy(true);
+            if (app) {
+                app.destroy(true);
             }
         };
-    }, []);
+    }, [app]);
 
     useEffect(() => {
+        const handleClick = (zoneId: number | null) => {
+            onZoneClick(zoneId);
+        };
         if (!app || !backgroundRef.current) return;
 
         const background = backgroundRef.current;
@@ -115,7 +116,7 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({rectangles, setRectang
         const onPointerUp = (event: any) => {
             if (!startPoint || !currentRectangle) return;
 
-            const { x, y } = event.data.global;
+            // const { x, y } = event.data.global;
 
             const newRect: ZoneData = {
                 x: startPoint.x,
@@ -140,12 +141,12 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({rectangles, setRectang
             background.off('pointermove', onPointerMove)
             background.off('pointerup', onPointerUp);
         };
-    }, [app, isDrawingMode, rectangles]);
+    }, [app, isDrawingMode, rectangles, activeZoneId, onTempRectangleChange, onZoneClick]);
 
     useEffect(() => {
         const savedZones = JSON.parse(localStorage.getItem('savedZones') || '[]');
         setRectangles(savedZones);
-    }, []);
+    }, [setRectangles]);
 
 
     useEffect(() => {
