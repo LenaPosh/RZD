@@ -34,8 +34,8 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({rectangles, setRectang
 
     const [selectedZoneName, setSelectedZoneName] = useState<string | null>(null);
 
-
 // eslint-disable-next-line react-hooks/exhaustive-deps
+
     useEffect(() => {
         const newApp = new Application();
 
@@ -75,18 +75,21 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({rectangles, setRectang
         };
     }, []);
 
+
+
     useEffect(() => {
+        const currentBackground = backgroundRef.current;
         const handleClick = (zoneId: number | null) => {
             onZoneClick(zoneId);
         };
-        if (!app || !backgroundRef.current) return;
+        if (!app || !currentBackground) return;
 
-        const background = backgroundRef.current;
+        const background = currentBackground;
         let startPoint: Point | null = null;
         let currentRectangle: Graphics | null = null;
 
         const onPointerDown = (event: any) => {
-            if (!isDrawingMode) return;
+            if (!isDrawingMode || !app || !app.stage) return;
             const zoneId = activeZoneId;
             const { x, y } = event.data.global;
             startPoint = { x, y };
@@ -114,6 +117,8 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({rectangles, setRectang
         };
 
         const onPointerUp = (event: any) => {
+            console.log("Текущий activeZoneId:", activeZoneId);
+
             if (!startPoint || !currentRectangle) return;
 
             // const { x, y } = event.data.global;
@@ -124,6 +129,8 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({rectangles, setRectang
                 width: event.data.global.x - startPoint.x,
                 height: event.data.global.y - startPoint.y,
                 id: generateUniqueId(),
+                zoneId: activeZoneId,
+                name: "Новая зона"
             };
             onTempRectangleChange(newRect);
 
@@ -137,9 +144,11 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({rectangles, setRectang
         background.on('pointerup', onPointerUp);
 
         return () => {
-            background.off('pointerdown', onPointerDown);
-            background.off('pointermove', onPointerMove)
-            background.off('pointerup', onPointerUp);
+            if (app && currentBackground) {
+                currentBackground.off('pointerdown', onPointerDown);
+                currentBackground.off('pointermove', onPointerMove);
+                currentBackground.off('pointerup', onPointerUp);
+            }
         };
     }, [app, isDrawingMode, rectangles, activeZoneId, onTempRectangleChange, onZoneClick]);
 
@@ -155,19 +164,15 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({rectangles, setRectang
         rectangles.forEach((rect, index) => {
             let zoneGraphics = app.stage.children.find(c => c.label === `zone_${rect.id}`) as Graphics;
 
-            if (!zoneGraphics) {
+            if (!zoneGraphics && app && app.stage) {
                 zoneGraphics = new Graphics();
-                zoneGraphics.label = `zone_${rect.id}`; // Используем label вместо name
+                zoneGraphics.label = `zone_${rect.id}`;
                 app.stage.addChild(zoneGraphics);
                 zoneGraphics.interactive = true;
                 zoneGraphics.on('pointerdown', () => {
                     console.log("Rectangle clicked with ID:", rect.id);
-
-                    if (typeof rect.id === 'number') {
-                        onZoneClick(rect.id);
-                    } else {
-                        console.error('ID зоны не определён или не является числом');
-                    }
+                    setSelectedZoneName(rect.name ?? null);
+                    onZoneClick(rect.id);
                 });
             }
 
@@ -220,14 +225,25 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({rectangles, setRectang
         console.log("Active zone ID changed to:", activeZoneId);
     }, [activeZoneId]);
 
+    useEffect(() => {
+        console.log('Имя выбранной зоны:', selectedZoneName);
+    }, [selectedZoneName]);
 
 
     return (
         <>
             <div ref={canvasRef} style={{ width: '100%', height: '100%', overflow: 'hidden' }} />;
-            {selectedRectangle && (
-                <div style={{ position: 'absolute', top: `${selectedRectangle.y}px`, left: `${selectedRectangle.x}px` }}>
-                    Выбранная зона: {selectedZoneName}
+            {selectedRectangle && selectedZoneName && (
+                <div style={{
+                    position: 'absolute',
+                    top: `${selectedRectangle.y - 3}px`,
+                    alignContent: `${selectedRectangle.x}px`,
+                    color: 'white',
+                    backgroundColor: 'rgba(0,0,0,0.4)',
+                    padding: '3px',
+                    pointerEvents: 'none',
+                }}>
+                    {selectedZoneName}
                 </div>
             )}
 

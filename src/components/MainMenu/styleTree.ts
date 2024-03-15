@@ -114,7 +114,7 @@ export const TreeGroupContainer = styled.div<{ $isActive: boolean }>`
 `;
 
 export const Button = styled.button`
-  padding: 10px 15px;
+  padding: 8px 10px;
   font-size: 10px;
   color: white;
   background-color: #5FC15D;
@@ -157,7 +157,7 @@ export const ButtonsContainer = styled.div`
     border-radius: 4px;
     background-color: #5FC15D;
     color: white;
-    font-size: 11px;
+    font-size: 10px;
     cursor: pointer;
 
     &:hover {

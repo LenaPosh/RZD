@@ -34,15 +34,7 @@ import CanvasComponent from "./CanvasComponent";
 
 // const TREE_DATA_URL = "";
 
-export interface ZoneData {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-    color?: string;
-    id?: number | null;
-    name?: string;
-}
+
 
 
 
@@ -137,9 +129,20 @@ const Tree: React.FC<TreeProps> = ({
     );
 };
 
+export interface ZoneData {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    color?: string;
+    id: number;
+    name?: string;
+    zoneId?: number | null;
+}
 
 const MainMenu = () => {
     const [activeFloor, setActiveFloor] = useState<number | string | null>(null);
+    // const [complexData, setComplexData] = useState<ComplexData | null>(null);
     const [activeIds, setActiveIds] = useState<(number | string)[]>([]);
     const [isDrawingMode, setIsDrawingMode] = useState(false)
     const [activeNode, setActiveNode] = useState<TreeNodeData | null>(null);
@@ -147,21 +150,30 @@ const MainMenu = () => {
     const [rectangles, setRectangles] = useState<ZoneData[]>([]);
     const [activeZoneId, setActiveZoneId] = useState<number | null>(null);
     const [, setSelectedZoneName] = useState<string | null>(null);
+    const [currentZoneName, setCurrentZoneName] = useState<string | null>(null);
 
 
     const handleFloorClick = (floorId: number | string, node?: TreeNodeData): void => {
-        // console.log("Выбран узел:", node);
-        // console.log("Обновление activeNode до:", node);
         setActiveFloor(floorId);
         setActiveNode(node ? node : null);
-        // console.log("Вызван setActiveNode с:", node ? node : null);
 
         let newActiveIds = [floorId];
         if (node && node.children && node.children.length > 0) {
             newActiveIds = newActiveIds.concat(findAllChildrenIds(node));
         }
         setActiveIds(newActiveIds);
+
+        const zone = rectangles.find(rect => rect.zoneId === floorId);
+        if (zone) {
+            setActiveZoneId(zone.id);
+        } else {
+            setActiveZoneId(null);
+        }
+        if (node) {
+            handlePlaceZone(node.name);
+        }
     };
+
 
 
     const handleTempRectangleChange = (newRect: ZoneData | null) => {
@@ -169,20 +181,27 @@ const MainMenu = () => {
     };
 
 
-    const handlePlaceZone = () => {
+    const handlePlaceZone = (zoneName: string) => {
         setIsDrawingMode(true);
+        setCurrentZoneName(zoneName);
     };
 
 
     const handleSaveZone = () => {
-        if (currentZoneData) {
-            console.log("Saving zone:", currentZoneData);
-            const updatedZones = [...rectangles, currentZoneData];
+        if (currentZoneData && currentZoneName) {
+            const newZone = {
+                ...currentZoneData,
+                name: currentZoneName
+            };
+            const updatedZones = [...rectangles, newZone];
             localStorage.setItem('savedZones', JSON.stringify(updatedZones));
             setRectangles(updatedZones);
             setCurrentZoneData(null);
+            setCurrentZoneName(null);
         }
     };
+
+
 
     useEffect(() => {
         console.log("Loading saved zones from localStorage");
@@ -194,18 +213,15 @@ const MainMenu = () => {
         const zone = zoneId !== null ? rectangles.find(rect => rect.id === zoneId) : null;
         if (zone) {
             setSelectedZoneName(zone.name ?? null);
+            setActiveZoneId(zone.id);
             console.log("Selected zone name:", zone.name);
         } else {
             setSelectedZoneName(null);
+            setActiveZoneId(null);
             console.log("No selected zone name");
         }
         console.log("Zone clicked with ID:", zoneId);
-        if (zoneId !== activeZoneId) {
-            setActiveZoneId(zoneId);
-        }
     };
-
-
 
 
 
@@ -407,7 +423,7 @@ const MainMenu = () => {
                                 return (
                                     node.id === activeNode?.id ? (
                                         <ButtonsContainer>
-                                            <Button onClick={handlePlaceZone}>Разместить зону</Button>
+                                            <Button onClick={() => handlePlaceZone(node.name)}>Разместить зону</Button>
                                             <Button onClick={handleSaveZone}>Сохранить</Button>
 
                                         </ButtonsContainer>
