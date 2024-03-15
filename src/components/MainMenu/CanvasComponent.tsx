@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {Application, Assets, Graphics, Sprite, Texture} from 'pixi.js';
-import imagePlan from './canvas.png';
+import imagePlan from '../icons/home.jpg';
 import {ZoneData} from "./MainMenu";
 
 interface Point {
@@ -41,8 +41,8 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({rectangles, setRectang
 
         (async () => {
             await newApp.init({
-                width: window.innerWidth,
-                height: window.innerHeight,
+                width: 1280,
+                height: 500,
                 backgroundColor: 0x1099bb,
             });
 
@@ -181,7 +181,7 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({rectangles, setRectang
              zoneGraphics.clear();
 
             zoneGraphics.fill(index % 2 === 0 ? 'rgba(0, 0, 0, 0.1)' : 'rgba(143, 255, 0, 0.2)', isActive ? 0.5 : 0.3);
-
+            zoneGraphics.stroke({ width: 3, color: 0xFF0000, alpha: 1 });
             zoneGraphics.rect(rect.x, rect.y, rect.width, rect.height);
             zoneGraphics.fill();
 

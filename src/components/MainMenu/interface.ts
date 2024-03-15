@@ -11,20 +11,20 @@ export interface TreeNodeData {
 
 export interface TreeNodeProps {
     isChild?: boolean;
-    level: number;
-    onFloorClick: (floorId: number | string, node?: TreeNodeData) => void;
+    $level: number;
+    $onFloorClick: (floorId: number | string, node?: TreeNodeData) => void;
     $isActive?: boolean;
-    isParentActive: boolean;
-    activeIds: (number | string)[];
-    isFloor: boolean;
+    $isParentActive: boolean;
+    $activeIds: (number | string)[];
+    $isFloor: boolean;
 }
 
 export interface TreeIconProps {
-    hasChildren: boolean;
+    $hasChildren: boolean;
 }
 
 export interface TreeChildrenProps {
-    collapsed?: boolean;
+    $collapsed?: boolean;
 }
 
 export interface TreeProps {

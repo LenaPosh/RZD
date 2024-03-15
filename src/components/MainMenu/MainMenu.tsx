@@ -17,7 +17,7 @@ import {
 } from "./style";
 import { ReactComponent as ArrowDownSVG } from '../icons/arrowDown.svg';
 import {TreeNodeData, TreeProps} from "./interface";
-import {ComplexContainer, TreeNode, TreeText, TreeIcon, TreeChildren, StyledCircleGreenSVG, StyledCircleFioletEmptySVG, TreeGroupContainer, Button, ButtonsContainer} from "./styleTree";
+import {ComplexContainer, TreeNode, TreeText, TreeIcon, TreeChildren, StyledCircleGreenSVG, StyledCircleVioletEmptySVG, TreeGroupContainer, Button, ButtonsContainer} from "./styleTree";
 import {MapAndInfoWrapper, InfoAndLegendWrapper, SearchLegendSVG} from "./styleMapAndInfo";
 import {BriefInfoData} from './interface'
 // import {ComplexData} from "./interface";
@@ -79,34 +79,34 @@ const Tree: React.FC<TreeProps> = ({
             {/*    }*/}
             {/*>*/}
                 <TreeNode
-                    isFloor={data.isFloor}
-                    level={level}
+                    $isFloor={data.isFloor}
+                    $level={level}
                     onClick={handleToggle}
                     $isActive={activeIds.includes(data.id)}
-                    isParentActive={isParentActive || activeIds.includes(data.id)}
-                    activeIds={activeIds}
-                    onFloorClick={onFloorClick}
+                    $isParentActive={isParentActive || activeIds.includes(data.id)}
+                    $activeIds={activeIds}
+                    $onFloorClick={onFloorClick}
                 >
-                    {level > 0 && !data.isFloor && (level === 1 ? <StyledCircleGreenSVG/> : <StyledCircleFioletEmptySVG/>)}
+                    {level > 0 && !data.isFloor && (level === 1 ? <StyledCircleGreenSVG/> : <StyledCircleVioletEmptySVG/>)}
                     <div style={{ flex: 1 }}>
                         <TreeText
-                            level={level}
-                            isFloor={data.isFloor}
-                            isParentActive={isParentActive}
-                            activeIds={activeIds}
-                            onFloorClick={onFloorClick}
+                            $level={level}
+                            $isFloor={data.isFloor}
+                            $isParentActive={isParentActive}
+                            $activeIds={activeIds}
+                            $onFloorClick={onFloorClick}
                         >
                             {data.name}
                         </TreeText>
                         {data.isPseudoElement && renderActions && renderActions(data)}
                     </div>
-                    <TreeIcon hasChildren={hasChildren} onClick={handleArrowClick}>
+                    <TreeIcon $hasChildren={hasChildren} onClick={handleArrowClick}>
                         {hasChildren && !isPseudoElement && (collapsed ? <ArrowUpSVG /> : <ArrowDownSVG />)}
                     </TreeIcon>
                 </TreeNode>
 
                 {!collapsed && data.children && (
-                    <TreeChildren collapsed={collapsed}>
+                    <TreeChildren $collapsed={collapsed}>
                         {data.children.map((child) => (
                             <Tree
                                 key={child.id}
@@ -232,7 +232,6 @@ const MainMenu = () => {
         ids.push(node.id);
         node.children?.forEach(child => findAllChildrenIds(child, ids));
         return ids;
-
     };
 
 

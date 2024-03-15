@@ -7,8 +7,9 @@ export const InfoAndLegendWrapper = styled.div`
   flex-direction: row;
   align-items: center;
   width: 100%;
-  margin-top: auto;
+  margin-bottom: 100px;
   z-index: 10;
+  margin-top: var(--info-container-height);
 `;
 
 export const BriefInfoContainer = styled.div`
@@ -60,16 +61,16 @@ export const MapAndInfoWrapper = styled.div`
   justify-content: flex-start;
   margin-left: 20px;
   width: 100%;
-
+  height: 100vh;
 `;
 
 
-export const MapContainer = styled.div`
-  flex-grow: 2;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  height: 80%;
-
-`;
+// export const MapContainer = styled.div`
+//   flex-grow: 2;
+//   display: flex;
+//   justify-content: center;
+//   align-items: center;
+//   width: 100%;
+//   height: 80%;
+//
+// `;

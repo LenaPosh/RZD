@@ -1,18 +1,18 @@
 import styled from "styled-components";
 import { ReactComponent as CircleGreenSVG} from "../icons/circleGreen.svg";
-import { ReactComponent as CircleFioletEmptySVG} from "../icons/circleFioletEmpty.svg";
+import { ReactComponent as CircleVioletEmptySVG} from "../icons/circleVioletEmpty.svg";
 import {TreeChildrenProps, TreeIconProps, TreeNodeProps} from "./interface";
 
 export const TreeIcon = styled.span<TreeIconProps>`
   margin-left: 2px;
   margin-right: 5px;
-  display: ${props => props.hasChildren ? 'inline' : 'none'};
+  display: ${props => props.$hasChildren ? 'inline' : 'none'};
 `;
 
 export const TreeText = styled.span<TreeNodeProps>`
   font-family: 'Inter', sans-serif;
-  font-size: ${props => props.level === 0 ? '17px' : '14px'};
-  font-weight: ${props => props.level === 0 ? 600 : 400};
+  font-size: ${props => props.$level === 0 ? '17px' : '14px'};
+  font-weight: ${props => props.$level === 0 ? 600 : 400};
   line-height: 18px;
   letter-spacing: 0;
   text-align: left;
@@ -21,7 +21,7 @@ export const TreeText = styled.span<TreeNodeProps>`
 
 
 export const TreeChildren = styled.div<TreeChildrenProps>`
-  display: ${({ collapsed }) => (collapsed ? 'none' : 'block')};
+  display: ${({ $collapsed }) => ($collapsed ? 'none' : 'block')};
   max-height: 700px;
   overflow-y: hidden;
 `;
@@ -34,7 +34,7 @@ export const StyledCircleGreenSVG = styled(CircleGreenSVG)`
   flex-shrink: 0;
 `;
 
-export const StyledCircleFioletEmptySVG = styled(CircleFioletEmptySVG)`
+export const StyledCircleVioletEmptySVG = styled(CircleVioletEmptySVG)`
   width: 21px; 
   height: 21px; 
   margin-right: 12px;
@@ -48,9 +48,9 @@ export const TreeNode = styled.div<TreeNodeProps>`
   padding: 5px;
   border-radius: 5px;
   background-color: ${props => props.$isActive ? 'white' : '#F2F4F6'};
-  color: ${props => (props.$isActive && props.isFloor) ? '#5FC15D' : 'black'};
-  margin-left: ${props => props.level * 10}px;
-  font-weight: ${props => props.isFloor ? 'bold' : 'normal'};
+  color: ${props => (props.$isActive && props.$isFloor) ? '#5FC15D' : 'black'};
+  margin-left: ${props => props.$level * 3}px;
+  font-weight: ${props => props.$isFloor ? 'bold' : 'normal'};
 
   &:before {
     content: '';
@@ -58,14 +58,14 @@ export const TreeNode = styled.div<TreeNodeProps>`
     width: 6px;
     height: 6px;
     border-radius: 50%;
-    background-color: ${props => (props.isFloor ? (props.$isActive ? '#5FC15D' : 'grey') : 'transparent')};
+    background-color: ${props => (props.$isFloor ? (props.$isActive ? '#5FC15D' : 'grey') : 'transparent')};
 
     margin-right: 5px;
     
   }
 
   // &:hover {
-  //   background-color: ${props => props.$isActive || props.isParentActive ? 'white' : '#E8E8E8'};
+  //   background-color: ${props => props.$isActive || props.$isParentActive ? 'white' : '#E8E8E8'};
   // }
 
 `;
@@ -79,7 +79,7 @@ export const ComplexContainer = styled.div`
   margin: 5px 0;
   border-radius: 10px;
   overflow-y: auto;
-  max-height: 500px;
+  max-height: 610px;
 
   &::-webkit-scrollbar {
     width: 3px !important;
