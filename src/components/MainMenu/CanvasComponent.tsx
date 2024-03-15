@@ -73,6 +73,7 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({rectangles, setRectang
                 app.destroy(true);
             }
         };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
 
