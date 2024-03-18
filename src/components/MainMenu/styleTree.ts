@@ -22,7 +22,7 @@ export const TreeText = styled.span<TreeNodeProps>`
 
 export const TreeChildren = styled.div<TreeChildrenProps>`
   display: ${({ $collapsed }) => ($collapsed ? 'none' : 'block')};
-  max-height: 700px;
+  max-height: 850px;
   overflow-y: hidden;
 `;
 

@@ -11,6 +11,7 @@ export const Layout = styled.div`
   display: flex;
   justify-content: center;
   box-sizing: border-box;
+  overflow-y: hidden;
 `;
 
 export const Sidebar = styled.div`

@@ -21,10 +21,13 @@ interface CanvasComponentProps {
     onZoneClick: (zoneId: number | null) => void;
     activeZoneId: number | null;
     isDrawingMode: boolean;
+    setActiveZoneId: React.Dispatch<React.SetStateAction<number | null>>;
+    setActiveIds: React.Dispatch<React.SetStateAction<Array<number | string>>>;
 }
 
 
-const CanvasComponent: React.FC<CanvasComponentProps> = ({rectangles, setRectangles, onTempRectangleChange, onZoneClick, activeZoneId, isDrawingMode }) => {
+const CanvasComponent: React.FC<CanvasComponentProps> = ({rectangles, setRectangles, onTempRectangleChange, onZoneClick, activeZoneId, isDrawingMode,   setActiveZoneId,
+                                                             setActiveIds }) => {
 
     const canvasRef = useRef<HTMLDivElement | null>(null);
     const [app, setApp] = useState<Application | null>(null);
@@ -34,7 +37,7 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({rectangles, setRectang
 
     const [selectedZoneName, setSelectedZoneName] = useState<string | null>(null);
 
-// eslint-disable-next-line react-hooks/exhaustive-deps
+    const [drawingZoneId, setDrawingZoneId] = useState<number | null>(null);
 
     useEffect(() => {
         const newApp = new Application();
@@ -97,6 +100,8 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({rectangles, setRectang
             currentRectangle = new Graphics();
             app.stage.addChild(currentRectangle);
             handleClick(zoneId);
+            setDrawingZoneId(activeZoneId);
+            console.log(`Pointer down at (${x}, ${y}) with activeZoneId: ${activeZoneId}`);
         };
         const onPointerMove = (event: any) => {
             if (!startPoint || !currentRectangle) return;
@@ -118,7 +123,7 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({rectangles, setRectang
         };
 
         const onPointerUp = (event: any) => {
-            console.log("Текущий activeZoneId:", activeZoneId);
+            // console.log("Текущий activeZoneId:", activeZoneId);
 
             if (!startPoint || !currentRectangle) return;
 
@@ -134,11 +139,15 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({rectangles, setRectang
                 name: "Новая зона"
             };
             onTempRectangleChange(newRect);
+            console.log(`Pointer up with newRect:`, newRect);
 
             startPoint = null;
             currentRectangle = null;
+            if (newRect && typeof newRect.zoneId === 'number') {
+                setRectangles([...rectangles, newRect]);
+                setDrawingZoneId(null);
+            }
         };
-
 
         background.on('pointerdown', onPointerDown);
         background.on('pointermove', onPointerMove)
@@ -151,12 +160,19 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({rectangles, setRectang
                 currentBackground.off('pointerup', onPointerUp);
             }
         };
-    }, [app, isDrawingMode, rectangles, activeZoneId, onTempRectangleChange, onZoneClick]);
+    }, [app, isDrawingMode, rectangles, activeZoneId, onTempRectangleChange, onZoneClick, setRectangles]);
 
     useEffect(() => {
         const savedZones = JSON.parse(localStorage.getItem('savedZones') || '[]');
         setRectangles(savedZones);
     }, [setRectangles]);
+
+    useEffect(() => {
+        if (drawingZoneId !== null) {
+            setActiveZoneId(drawingZoneId);
+            setActiveIds([drawingZoneId]);
+        }
+    }, [drawingZoneId, setActiveZoneId, setActiveIds]);
 
 
     useEffect(() => {
@@ -171,9 +187,14 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({rectangles, setRectang
                 app.stage.addChild(zoneGraphics);
                 zoneGraphics.interactive = true;
                 zoneGraphics.on('pointerdown', () => {
-                    console.log("Rectangle clicked with ID:", rect.id);
+                    // console.log("Rectangle clicked with ID:", rect.id);
+                    // console.log("Associated zoneId (should match with tree node):", rect.zoneId);
                     setSelectedZoneName(rect.name ?? null);
-                    onZoneClick(rect.id);
+                    setActiveZoneId(rect.id);
+                    if (typeof rect.zoneId === 'number') {
+                        setActiveIds([rect.zoneId]);
+                        // console.log("Attempting to set active zone in tree with ID:", rect.zoneId);
+                    }
                 });
             }
 
@@ -203,7 +224,7 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({rectangles, setRectang
         }
 
 
-    }, [app, rectangles, activeZoneId, onZoneClick]);
+    }, [app, rectangles, activeZoneId, onZoneClick, setActiveIds, setActiveZoneId]);
 
     useEffect(() => {
         console.log("activeZoneId:", activeZoneId);
@@ -213,21 +234,19 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({rectangles, setRectang
         if (activeRect && activeRect.name) {
             setSelectedZoneName(activeRect.name);
             setSelectedRectangle(activeRect);
-            console.log("Selected zone name:", activeRect.name);
         } else {
             setSelectedZoneName(null);
             setSelectedRectangle(null);
-            console.log("No selected zone name");
         }
     }, [activeZoneId, rectangles]);
 
 
     useEffect(() => {
-        console.log("Active zone ID changed to:", activeZoneId);
+        // console.log("Active zone ID changed to:", activeZoneId);
     }, [activeZoneId]);
 
     useEffect(() => {
-        console.log('Имя выбранной зоны:', selectedZoneName);
+        // console.log('Имя выбранной зоны:', selectedZoneName);
     }, [selectedZoneName]);
 
 

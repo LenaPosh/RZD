@@ -35,6 +35,7 @@ export interface TreeProps {
     isParentActive: boolean;
     activeIds: (number | string)[];
     renderActions: (node: TreeNodeData) => React.ReactNode;
+    activeZoneId: number | null;
 }
 
 

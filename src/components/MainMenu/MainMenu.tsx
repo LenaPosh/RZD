@@ -34,10 +34,6 @@ import CanvasComponent from "./CanvasComponent";
 
 // const TREE_DATA_URL = "";
 
-
-
-
-
 const Tree: React.FC<TreeProps> = ({
 
                                        data,
@@ -46,11 +42,12 @@ const Tree: React.FC<TreeProps> = ({
                                        activeFloorId,
                                        isParentActive,
                                        activeIds,
+                                       activeZoneId,
                                        renderActions
                                    }) => {
 
     // console.log("Рендер узла:", data.id, "Активные ID:", activeIds);
-    const [collapsed, setCollapsed] = React.useState(true);
+    const [collapsed, setCollapsed] = React.useState(false);
     const isPseudoElement = data.isPseudoElement || level > 1;
     const hasChildren = !isPseudoElement && !!data.children && data.children.length > 0;
 
@@ -69,9 +66,16 @@ const Tree: React.FC<TreeProps> = ({
         setCollapsed(!collapsed);
         onFloorClick(data.id, data);
     };
+
+    useEffect(() => {
+        console.log('activeZoneId в Tree:', activeZoneId);
+        console.log('activeIds в Tree:', activeIds);
+    }, [activeZoneId, activeIds]);
+
+
     return (
         <ComplexContainer>
-            <TreeGroupContainer $isActive={activeIds.includes(data.id)}>
+            <TreeGroupContainer $isActive={activeIds.includes(data.id)  || data.id === activeZoneId}>
             {/*<TreeGroupContainer*/}
             {/*    isActive={*/}
             {/*        activeIds.includes(data.id) ||*/}
@@ -95,6 +99,7 @@ const Tree: React.FC<TreeProps> = ({
                             $isParentActive={isParentActive}
                             $activeIds={activeIds}
                             $onFloorClick={onFloorClick}
+                            onClick={handleToggle}
                         >
                             {data.name}
                         </TreeText>
@@ -116,6 +121,7 @@ const Tree: React.FC<TreeProps> = ({
                                 activeFloorId={activeFloorId}
                                 isParentActive={isParentActive || data.id === activeFloorId}
                                 activeIds={activeIds}
+                                activeZoneId={activeZoneId}
                                 renderActions={renderActions}
                             />
                         ))}
@@ -128,6 +134,8 @@ const Tree: React.FC<TreeProps> = ({
 
     );
 };
+
+
 
 export interface ZoneData {
     x: number;
@@ -154,6 +162,7 @@ const MainMenu = () => {
 
 
     const handleFloorClick = (floorId: number | string, node?: TreeNodeData): void => {
+        console.log(`handleFloorClick: floorId=${floorId}, node=`, node);
         setActiveFloor(floorId);
         setActiveNode(node ? node : null);
 
@@ -161,6 +170,7 @@ const MainMenu = () => {
         if (node && node.children && node.children.length > 0) {
             newActiveIds = newActiveIds.concat(findAllChildrenIds(node));
         }
+        console.log(`handleFloorClick: newActiveIds=`, newActiveIds);
         setActiveIds(newActiveIds);
 
         const zone = rectangles.find(rect => rect.zoneId === floorId);
@@ -174,6 +184,10 @@ const MainMenu = () => {
         }
     };
 
+    useEffect(() => {
+        console.log('activeZoneId в Tree:', activeZoneId);
+        console.log('activeIds в Tree:', activeIds);
+    }, [activeZoneId, activeIds]);
 
 
     const handleTempRectangleChange = (newRect: ZoneData | null) => {
@@ -188,6 +202,7 @@ const MainMenu = () => {
 
 
     const handleSaveZone = () => {
+        console.log(`handleSaveZone called with currentZoneData:`, currentZoneData, `and currentZoneName:`, currentZoneName);
         if (currentZoneData && currentZoneName) {
             const newZone = {
                 ...currentZoneData,
@@ -198,31 +213,38 @@ const MainMenu = () => {
             setRectangles(updatedZones);
             setCurrentZoneData(null);
             setCurrentZoneName(null);
+            setActiveIds([newZone.id]);
         }
     };
 
+    useEffect(() => {
+        console.log(`Rectangles updated:`, rectangles);
+    }, [rectangles]);
+
+    useEffect(() => {
+        console.log(`activeZoneId в Tree updated:`, activeZoneId);
+        console.log(`activeIds в Tree updated:`, activeIds);
+    }, [activeZoneId, activeIds]);
 
 
     useEffect(() => {
-        console.log("Loading saved zones from localStorage");
         const savedZones = JSON.parse(localStorage.getItem('savedZones') || '[]');
         setRectangles(savedZones);
     }, []);
 
     const handleZoneClick = (zoneId: number | null) => {
+        console.log(`[CanvasComponent] Нажатие на зону с ID: ${zoneId}`);
         const zone = zoneId !== null ? rectangles.find(rect => rect.id === zoneId) : null;
         if (zone) {
             setSelectedZoneName(zone.name ?? null);
             setActiveZoneId(zone.id);
-            console.log("Selected zone name:", zone.name);
+            console.log(`[CanvasComponent] Найдена зона с ID: ${zone.id}, устанавливаем activeZoneId в ${zone.id}`);
         } else {
             setSelectedZoneName(null);
             setActiveZoneId(null);
-            console.log("No selected zone name");
         }
-        console.log("Zone clicked with ID:", zoneId);
+        console.log(`[CanvasComponent] Зона с ID: ${zoneId} не найдена, сбрасываем activeZoneId`);
     };
-
 
 
 
@@ -293,20 +315,13 @@ const MainMenu = () => {
                         name: 'Этаж 2',
                         isFloor: true,
                         children: [
-                            {
-                                id: 13,
-                                name: 'Зона #398: Земля под вокзал дальнего следования',
-                                isPseudoElement: true,
-                                isFloor: false,
-                                children: []
-                            },
-                            {
-                                id: 14,
-                                name: 'Зона #398: Земля под вокзал дальнего следования',
-                                isPseudoElement: true,
-                                isFloor: false,
-                                children: []
-                            },
+                            // {
+                            //     id: 14,
+                            //     name: 'Зона #398: Земля под вокзал дальнего следования',
+                            //     isPseudoElement: true,
+                            //     isFloor: false,
+                            //     children: []
+                            // },
                         ],
                     },
 
@@ -415,7 +430,7 @@ const MainMenu = () => {
                             activeFloorId={activeFloor}
                             isParentActive={false}
                             activeIds={activeIds}
-
+                            activeZoneId={activeZoneId}
                             renderActions={(node) => {
                                 // console.log("Активный узел:", activeNode);
                                 // console.log("Текущий узел:", node);
@@ -447,6 +462,8 @@ const MainMenu = () => {
                             setRectangles={setRectangles}
                             onTempRectangleChange={handleTempRectangleChange}
                             isDrawingMode={isDrawingMode}
+                            setActiveIds={setActiveIds}
+                            setActiveZoneId={setActiveZoneId}
 
                         />
 
