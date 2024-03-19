@@ -6,7 +6,6 @@ export interface TreeNodeData {
     isPseudoElement?: boolean;
     isFloor: boolean;
     children?: TreeNodeData[];
-
 }
 
 export interface TreeNodeProps {

@@ -39,7 +39,8 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({rectangles, setRectang
     const [selectedRectangle, setSelectedRectangle] = useState<RectangleData | null>(null);
 
     const [drawingZoneId, setDrawingZoneId] = useState<number | null>(null);
-
+    const startPointRef = useRef<Point | null>(null);
+    const currentRectangleRef = useRef<Graphics | null>(null);
 
     useEffect(() => {
         const newApp = new Application();
@@ -91,36 +92,41 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({rectangles, setRectang
         if (!app || !currentBackground) return;
 
         const background = currentBackground;
-        let startPoint: Point | null = null;
-        let currentRectangle: Graphics | null = null;
+        // let startPoint: Point | null = null;
+        // let currentRectangle: Graphics | null = null;
 
         const onPointerDown = (event: any) => {
-            // console.log("onPointerDown", { x: event.data.global.x, y: event.data.global.y });
+            console.log("onPointerDown called", { event });
             const existingRectangle = rectangles.find(rect => rect.zoneId === activeZoneId);
-
+            console.log("existingRectangle:", existingRectangle, "isDrawingMode:", isDrawingMode);
             if (existingRectangle || !isDrawingMode) {
-                // console.log(`Рисование в зоне ${activeZoneId} запрещено.`);
+                console.log(`Drawing in zone ${activeZoneId} is not allowed. Existing rectangle:`, existingRectangle, "Is drawing mode:", isDrawingMode);
                 return;
             }
 
             const { x, y } = event.data.global;
-            startPoint = { x, y };
-            currentRectangle = new Graphics();
-            app.stage.addChild(currentRectangle);
+            startPointRef.current = { x, y };
+            console.log(`Setting startPoint at (${x}, ${y}) with activeZoneId: ${activeZoneId}`);
+            currentRectangleRef.current = new Graphics();
+            console.log(`Creating new Graphics object:`, currentRectangleRef.current);
+            app.stage.addChild(currentRectangleRef.current);
             setDrawingZoneId(activeZoneId);
-            // console.log(`Начало рисования в точке (${x}, ${y}) с activeZoneId: ${activeZoneId}`);
         };
 
         const onPointerMove = (event: any) => {
-            if (!startPoint || !currentRectangle) return;
-
+            if (!startPointRef.current || !currentRectangleRef.current) {
+                console.log("onPointerMove called but startPoint or currentRectangle is null");
+                return;
+            }
+            console.log("onPointerMove called but startPoint or currentRectangle is null");
             const { x, y } = event.data.global;
-            const width = x - startPoint.x;
-            const height = y - startPoint.y;
+            console.log("onPointerMove", { x, y });
+            const width = x - startPointRef.current.x;
+            const height = y - startPointRef.current.y;
 
-            currentRectangle.clear();
-            currentRectangle.stroke({width: 3, color: 0xFF0000});
-            currentRectangle.rect(startPoint.x, startPoint.y, width, height);
+            currentRectangleRef.current.clear();
+            currentRectangleRef.current.stroke({width: 3, color: 0xFF0000});
+            currentRectangleRef.current.rect(startPointRef.current.x, startPointRef.current.y, width, height);
         };
 
         let lastId = rectangles.reduce((max, rect) => Math.max(max, rect.id || 0), 0);
@@ -131,16 +137,19 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({rectangles, setRectang
         };
 
         const onPointerUp = (event: any) => {
-            // console.log("onPointerUp", { x: event.data.global.x, y: event.data.global.y });
+            console.log("onPointerUp called", { event });
 
-            if (!startPoint || !currentRectangle) return;
+            if (!startPointRef.current || !currentRectangleRef.current) {
+                console.log("onPointerUp but startPoint or currentRectangle is null");
+                return;
+            }
             const fillColor = rectangles.length % 2 === 0 ? 'rgba(0, 0, 0, 0.1)' : 'rgba(143, 255, 0, 0.2)';
 
             const newRect: ZoneData = {
-                x: startPoint.x,
-                y: startPoint.y,
-                width: event.data.global.x - startPoint.x,
-                height: event.data.global.y - startPoint.y,
+                x: startPointRef.current.x,
+                y: startPointRef.current.y,
+                width: event.data.global.x - startPointRef.current.x,
+                height: event.data.global.y - startPointRef.current.y,
                 id: generateUniqueId(),
                 zoneId: activeZoneId,
                 name: selectedZoneName ?? "Новая зона",
@@ -150,12 +159,13 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({rectangles, setRectang
             // console.log(`Pointer up with newRect:`, newRect);
             setRectangles([...rectangles, newRect]);
 
-            startPoint = null;
-            currentRectangle = null;
+            startPointRef.current = null;
+            currentRectangleRef.current = null;
             if (newRect && typeof newRect.zoneId === 'number') {
                 setRectangles([...rectangles, newRect]);
                 setDrawingZoneId(null);
             }
+            console.log(`Pointer up with newRect:`, newRect);
         };
 
         background.on('pointerdown', onPointerDown);
@@ -237,7 +247,7 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({rectangles, setRectang
         if (activeRect && activeRect.name) {
             const rectWithDefinedColor: RectangleData = {
                 ...activeRect,
-                color: activeRect.color || 'defaultColor'
+                color: activeRect.color || 'rgba(0, 0, 0, 0.1)'
             };
             setSelectedRectangle(rectWithDefinedColor);
         } else {

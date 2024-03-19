@@ -29,6 +29,7 @@ import { ReactComponent as DistanceSVG } from '../icons/distance.svg';
 import {BRIEF_INFO_URL} from "./BriefInfo";
 import {BriefInfo} from "./BriefInfo";
 import CanvasComponent from "./CanvasComponent";
+// import axios from "axios";
 
 
 
@@ -156,11 +157,13 @@ const MainMenu = () => {
     const [, setSelectedZoneName] = useState<string | null>(null);
     const [currentZoneName, setCurrentZoneName] = useState<string | null>(null);
 
+
     const findZoneRectangle = (zoneId: number | null) => {
         return rectangles.find(rect => rect.zoneId === zoneId);
     };
 
     const handleFloorClick = (floorId: number | string, node?: TreeNodeData): void => {
+        console.log(`handleFloorClick called with floorId: ${floorId} and node:`, node);
         setActiveFloor(floorId);
         setActiveNode(node ? node : null);
 
@@ -204,13 +207,12 @@ const MainMenu = () => {
 
 
     const handleSaveZone = () => {
-        console.log(`Saving zone with currentZoneData:`, currentZoneData, `and currentZoneName:`, currentZoneName);
+        console.log("handleSaveZone called");
         if (currentZoneData && currentZoneName) {
             const newZone = {
                 ...currentZoneData,
                 name: currentZoneName
             };
-            console.log(`New zone to be added:`, newZone);
             const updatedZones = [...rectangles, newZone];
             localStorage.setItem('savedZones', JSON.stringify(updatedZones));
             setRectangles(updatedZones);
@@ -229,16 +231,14 @@ const MainMenu = () => {
     }, []);
 
     const handleZoneClick = (zoneId: number | null) => {
-        console.log(`Zone clicked with ID: ${zoneId}`);
+        console.log(`handleZoneClick called with ID: ${zoneId}`);
         const zoneRectangle = rectangles.find(rect => rect.zoneId === zoneId);
         if (zoneRectangle) {
-            console.log(`Found rectangle for zoneId: ${zoneId}, setting currentZoneName to ${zoneRectangle.name}`);
             setActiveZoneId(zoneRectangle.id);
             setIsDrawingMode(false);
             setSelectedZoneName(zoneRectangle.name ?? "");
             // console.log(`Зона с ID: ${zoneRectangle.id} уже имеет прямоугольник, режим рисования выключен.`);
         } else {
-            console.log(`No rectangle found for zoneId: ${zoneId}, entering drawing mode`);
             setActiveZoneId(null);
             setIsDrawingMode(true);
             setSelectedZoneName("");
@@ -370,23 +370,65 @@ const MainMenu = () => {
         fetchBriefInfo();
     }, []);
 
-    // const [complexData, setComplexData] = useState<ComplexData | null>(null);
-    // const fetchComplexData = async () => {
+    // const [treeData, setTreeData] = useState<TreeNodeData | null>(null);
+    // const transformData = (serverData: TreeNodeData): TreeNodeData => {
+    //     return {
+    //         id: serverData.id,
+    //         name: serverData.name,
+    //         isFloor: serverData.isFloor,
+    //         children: serverData.children?.map(child => ({
+    //             id: child.id,
+    //             name: child.name,
+    //             isPseudoElement: child.isPseudoElement || false,
+    //             isFloor: child.isFloor,
+    //             children: child.children || []
+    //         })) || []
+    //     };
+    // };
+    //
+    // const fetchTreeData = async (): Promise<TreeNodeData> => {
     //     try {
-    //         const response = await fetch(TREE_DATA_URL);
-    //         if (!response.ok) {
-    //             throw new Error('Network response was not ok');
-    //         }
-    //         const data = await response.json();
-    //         setComplexData(data);
+    //         const response = await axios.get<TreeNodeData>('https://dev.platformvim.org/api/create_tree?oject_id=1', {
+    //             headers: {
+    //                 'Accept': 'application/json',
+    //             },
+    //         });
+    //         const rawData = response.data;
+    //
+    //         const transformNode = (node: any) => {
+    //             if (node.isPseudoElement === undefined) {
+    //                 node.isPseudoElement = false;
+    //             }
+    //
+    //             if (node.children && node.children.length > 0) {
+    //                 node.children = node.children.map(transformNode);
+    //             }
+    //
+    //             return node;
+    //         };
+    //
+    //         const transformedData = transformNode(rawData);
+    //
+    //         console.log("Преобразованные данные дерева:", transformedData);
+    //         return transformedData;
     //     } catch (error) {
-    //         console.error("There was a problem fetching complex data:", error);
+    //         console.error("Произошла ошибка при загрузке данных дерева:", error);
+    //         throw error;
+    //
     //     }
     // };
-
+    //
     // useEffect(() => {
-    //     fetchComplexData();
+    //     fetchTreeData()
+    //         .then(transformedData => {
+    //             setTreeData(transformedData);
+    //         })
+    //         .catch(error => {
+    //             console.error("Произошла ошибка при загрузке данных дерева:", error);
+    //         });
     // }, []);
+
+
 
     const handleZoomIn = () => {
         console.log("Увеличить масштаб карты");
@@ -424,31 +466,31 @@ const MainMenu = () => {
                             </SortInputContainer>
                             <StyledBurgerSortSVG />
                         </SearchAndSortContainer>
-                        <Tree
-                            data={treeData}
-                            level={0}
-                            onFloorClick={handleFloorClick}
-                            activeFloorId={activeFloor}
-                            isParentActive={false}
-                            activeIds={activeIds}
-                            activeZoneId={activeZoneId}
-                            renderActions={(node) => {
-                                // console.log("Активный узел:", activeNode);
-                                // console.log("Текущий узел:", node);
-                                return (
-                                    node.id === activeNode?.id ? (
-                                        <ButtonsContainer>
-                                            <Button onClick={() => handlePlaceZone(node.name)}>Разместить зону</Button>
-                                            <Button onClick={handleSaveZone}>Сохранить</Button>
-
-                                        </ButtonsContainer>
-                                    ) : null
-                                );
-                            }}
-
-
-                        />
-                        {/*{complexData ? <Tree data={complexData} /> : "Loading..."}*/}
+                        {/*{*/}
+                        {/*    treeData ? (*/}
+                                <Tree
+                                    data={treeData}
+                                    level={0}
+                                    onFloorClick={handleFloorClick}
+                                    activeFloorId={activeFloor}
+                                    isParentActive={false}
+                                    activeIds={activeIds}
+                                    activeZoneId={activeZoneId}
+                                    renderActions={(node) => {
+                                        return (
+                                            node.id === activeNode?.id ? (
+                                                <ButtonsContainer>
+                                                    <Button onClick={() => handlePlaceZone(node.name)}>Разместить зону</Button>
+                                                    <Button onClick={handleSaveZone}>Сохранить</Button>
+                                                </ButtonsContainer>
+                                            ) : null
+                                        );
+                                    }}
+                                />
+                        {/*    ) : (*/}
+                        {/*        "Loading..."*/}
+                        {/*    )*/}
+                        {/*}*/}
 
                     </Sidebar>
                     <MapAndInfoWrapper>
