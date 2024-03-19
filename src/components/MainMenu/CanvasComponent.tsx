@@ -12,6 +12,7 @@ interface RectangleData {
     y: number;
     width: number;
     height: number;
+    color?: string;
 }
 
 interface CanvasComponentProps {
@@ -23,19 +24,18 @@ interface CanvasComponentProps {
     isDrawingMode: boolean;
     setActiveZoneId: React.Dispatch<React.SetStateAction<number | null>>;
     setActiveIds: React.Dispatch<React.SetStateAction<Array<number | string>>>;
+    selectedZoneName: string | null;
 }
 
 
 const CanvasComponent: React.FC<CanvasComponentProps> = ({rectangles, setRectangles, onTempRectangleChange, onZoneClick, activeZoneId, isDrawingMode,   setActiveZoneId,
-                                                             setActiveIds }) => {
+                                                             setActiveIds, selectedZoneName }) => {
 
     const canvasRef = useRef<HTMLDivElement | null>(null);
     const [app, setApp] = useState<Application | null>(null);
     const graphicsRef = useRef<Graphics | null>(null);
     const backgroundRef = useRef<Sprite | null>(null);
     const [selectedRectangle, setSelectedRectangle] = useState<RectangleData | null>(null);
-
-    const [selectedZoneName, setSelectedZoneName] = useState<string | null>(null);
 
     const [drawingZoneId, setDrawingZoneId] = useState<number | null>(null);
 
@@ -70,7 +70,7 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({rectangles, setRectang
 
             setApp(newApp);
         })();
-
+        console.log("PixiJS Application has been initialized.");
         return () => {
             if (app) {
                 app.destroy(true);
@@ -83,9 +83,9 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({rectangles, setRectang
 
     useEffect(() => {
         const currentBackground = backgroundRef.current;
-        const handleClick = (zoneId: number | null) => {
-            onZoneClick(zoneId);
-        };
+        // const handleClick = (zoneId: number | null) => {
+        //     onZoneClick(zoneId);
+        // };
         if (!app || !currentBackground) return;
 
         const background = currentBackground;
@@ -93,16 +93,22 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({rectangles, setRectang
         let currentRectangle: Graphics | null = null;
 
         const onPointerDown = (event: any) => {
-            if (!isDrawingMode || !app || !app.stage) return;
-            const zoneId = activeZoneId;
+            console.log("onPointerDown", { x: event.data.global.x, y: event.data.global.y });
+            const existingRectangle = rectangles.find(rect => rect.zoneId === activeZoneId);
+
+            if (existingRectangle || !isDrawingMode) {
+                console.log(`Рисование в зоне ${activeZoneId} запрещено.`);
+                return;
+            }
+
             const { x, y } = event.data.global;
             startPoint = { x, y };
             currentRectangle = new Graphics();
             app.stage.addChild(currentRectangle);
-            handleClick(zoneId);
             setDrawingZoneId(activeZoneId);
-            console.log(`Pointer down at (${x}, ${y}) with activeZoneId: ${activeZoneId}`);
+            console.log(`Начало рисования в точке (${x}, ${y}) с activeZoneId: ${activeZoneId}`);
         };
+
         const onPointerMove = (event: any) => {
             if (!startPoint || !currentRectangle) return;
 
@@ -123,11 +129,10 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({rectangles, setRectang
         };
 
         const onPointerUp = (event: any) => {
-            // console.log("Текущий activeZoneId:", activeZoneId);
+            console.log("onPointerUp", { x: event.data.global.x, y: event.data.global.y });
 
             if (!startPoint || !currentRectangle) return;
-
-            // const { x, y } = event.data.global;
+            const fillColor = rectangles.length % 2 === 0 ? 'rgba(0, 0, 0, 0.1)' : 'rgba(143, 255, 0, 0.2)';
 
             const newRect: ZoneData = {
                 x: startPoint.x,
@@ -136,10 +141,12 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({rectangles, setRectang
                 height: event.data.global.y - startPoint.y,
                 id: generateUniqueId(),
                 zoneId: activeZoneId,
-                name: "Новая зона"
+                name: selectedZoneName ?? "Новая зона",
+                color: fillColor,
             };
             onTempRectangleChange(newRect);
             console.log(`Pointer up with newRect:`, newRect);
+            setRectangles([...rectangles, newRect]);
 
             startPoint = null;
             currentRectangle = null;
@@ -160,7 +167,7 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({rectangles, setRectang
                 currentBackground.off('pointerup', onPointerUp);
             }
         };
-    }, [app, isDrawingMode, rectangles, activeZoneId, onTempRectangleChange, onZoneClick, setRectangles]);
+    }, [app, isDrawingMode, rectangles, activeZoneId, onTempRectangleChange, onZoneClick, setRectangles, selectedZoneName]);
 
     useEffect(() => {
         const savedZones = JSON.parse(localStorage.getItem('savedZones') || '[]');
@@ -187,25 +194,27 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({rectangles, setRectang
                 app.stage.addChild(zoneGraphics);
                 zoneGraphics.interactive = true;
                 zoneGraphics.on('pointerdown', () => {
-                    // console.log("Rectangle clicked with ID:", rect.id);
-                    // console.log("Associated zoneId (should match with tree node):", rect.zoneId);
-                    setSelectedZoneName(rect.name ?? null);
                     setActiveZoneId(rect.id);
                     if (typeof rect.zoneId === 'number') {
                         setActiveIds([rect.zoneId]);
-                        // console.log("Attempting to set active zone in tree with ID:", rect.zoneId);
                     }
                 });
             }
 
             const isActive = rect.id === activeZoneId;
 
-             zoneGraphics.clear();
+
+            zoneGraphics.clear();
+            if (rect.id === activeZoneId) {
+                zoneGraphics.stroke({ width: 3, color: 0xFF0000, alpha: 1 });
+            } else {
+                zoneGraphics.stroke({width: 2, color: 0x000000, alpha: 1});
+            }
 
             zoneGraphics.fill(index % 2 === 0 ? 'rgba(0, 0, 0, 0.1)' : 'rgba(143, 255, 0, 0.2)', isActive ? 0.5 : 0.3);
             zoneGraphics.stroke({ width: 3, color: 0xFF0000, alpha: 1 });
             zoneGraphics.rect(rect.x, rect.y, rect.width, rect.height);
-            zoneGraphics.fill();
+            // zoneGraphics.fill();
 
             if (isActive) {
                 zoneGraphics.stroke({ width: 5, color: 0x0000FF, alpha: 1 });
@@ -213,13 +222,14 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({rectangles, setRectang
             }
         });
 
-
         const activeRect = activeZoneId !== null ? rectangles.find(rect => rect.id === activeZoneId) : undefined;
         if (activeRect && activeRect.name) {
-            setSelectedZoneName(activeRect.name);
-            setSelectedRectangle(activeRect);
+            const rectWithDefinedColor: RectangleData = {
+                ...activeRect,
+                color: activeRect.color || 'defaultColor'
+            };
+            setSelectedRectangle(rectWithDefinedColor);
         } else {
-            setSelectedZoneName(null);
             setSelectedRectangle(null);
         }
 
@@ -231,23 +241,19 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({rectangles, setRectang
         console.log("rectangles:", rectangles);
         const activeRect = activeZoneId !== null ? rectangles.find(rect => rect.id === activeZoneId) : undefined;
         console.log("activeRect:", activeRect);
+
         if (activeRect && activeRect.name) {
-            setSelectedZoneName(activeRect.name);
-            setSelectedRectangle(activeRect);
+            const rectData: RectangleData = {
+                ...activeRect,
+                color: activeRect.color || 'defaultColor'
+            };
+            setSelectedRectangle(rectData);
         } else {
-            setSelectedZoneName(null);
             setSelectedRectangle(null);
         }
     }, [activeZoneId, rectangles]);
 
 
-    useEffect(() => {
-        // console.log("Active zone ID changed to:", activeZoneId);
-    }, [activeZoneId]);
-
-    useEffect(() => {
-        // console.log('Имя выбранной зоны:', selectedZoneName);
-    }, [selectedZoneName]);
 
 
     return (

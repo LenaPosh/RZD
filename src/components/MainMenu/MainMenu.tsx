@@ -142,7 +142,7 @@ export interface ZoneData {
     y: number;
     width: number;
     height: number;
-    color?: string;
+    color: string;
     id: number;
     name?: string;
     zoneId?: number | null;
@@ -160,9 +160,11 @@ const MainMenu = () => {
     const [, setSelectedZoneName] = useState<string | null>(null);
     const [currentZoneName, setCurrentZoneName] = useState<string | null>(null);
 
+    const findZoneRectangle = (zoneId: number | null) => {
+        return rectangles.find(rect => rect.zoneId === zoneId);
+    };
 
     const handleFloorClick = (floorId: number | string, node?: TreeNodeData): void => {
-        console.log(`handleFloorClick: floorId=${floorId}, node=`, node);
         setActiveFloor(floorId);
         setActiveNode(node ? node : null);
 
@@ -170,24 +172,27 @@ const MainMenu = () => {
         if (node && node.children && node.children.length > 0) {
             newActiveIds = newActiveIds.concat(findAllChildrenIds(node));
         }
-        console.log(`handleFloorClick: newActiveIds=`, newActiveIds);
         setActiveIds(newActiveIds);
 
-        const zone = rectangles.find(rect => rect.zoneId === floorId);
-        if (zone) {
-            setActiveZoneId(zone.id);
+        if (node && node.isPseudoElement) {
+            const numericFloorId = typeof floorId === 'string' ? parseInt(floorId, 10) : floorId;
+            const zoneRectangle = findZoneRectangle(numericFloorId);
+
+            if (zoneRectangle) {
+                setActiveZoneId(zoneRectangle.id);
+                setIsDrawingMode(false);
+                setCurrentZoneName(zoneRectangle.name ?? null);
+            } else {
+                setActiveZoneId(numericFloorId);
+                setIsDrawingMode(true);
+                console.log("setCurrentZoneName called from handleZoneClick", node.name);
+                setCurrentZoneName(node.name);
+            }
         } else {
             setActiveZoneId(null);
-        }
-        if (node) {
-            handlePlaceZone(node.name);
+            setIsDrawingMode(false);
         }
     };
-
-    useEffect(() => {
-        console.log('activeZoneId в Tree:', activeZoneId);
-        console.log('activeIds в Tree:', activeIds);
-    }, [activeZoneId, activeIds]);
 
 
     const handleTempRectangleChange = (newRect: ZoneData | null) => {
@@ -197,6 +202,7 @@ const MainMenu = () => {
 
     const handlePlaceZone = (zoneName: string) => {
         setIsDrawingMode(true);
+        console.log("setCurrentZoneName called from handleZoneClick", zoneName);
         setCurrentZoneName(zoneName);
     };
 
@@ -212,19 +218,12 @@ const MainMenu = () => {
             localStorage.setItem('savedZones', JSON.stringify(updatedZones));
             setRectangles(updatedZones);
             setCurrentZoneData(null);
-            setCurrentZoneName(null);
+            setSelectedZoneName(newZone.name);
             setActiveIds([newZone.id]);
         }
     };
 
-    useEffect(() => {
-        console.log(`Rectangles updated:`, rectangles);
-    }, [rectangles]);
 
-    useEffect(() => {
-        console.log(`activeZoneId в Tree updated:`, activeZoneId);
-        console.log(`activeIds в Tree updated:`, activeIds);
-    }, [activeZoneId, activeIds]);
 
 
     useEffect(() => {
@@ -233,18 +232,21 @@ const MainMenu = () => {
     }, []);
 
     const handleZoneClick = (zoneId: number | null) => {
-        console.log(`[CanvasComponent] Нажатие на зону с ID: ${zoneId}`);
-        const zone = zoneId !== null ? rectangles.find(rect => rect.id === zoneId) : null;
-        if (zone) {
-            setSelectedZoneName(zone.name ?? null);
-            setActiveZoneId(zone.id);
-            console.log(`[CanvasComponent] Найдена зона с ID: ${zone.id}, устанавливаем activeZoneId в ${zone.id}`);
+        const zoneRectangle = rectangles.find(rect => rect.zoneId === zoneId);
+        if (zoneRectangle) {
+            setActiveZoneId(zoneRectangle.id);
+            setIsDrawingMode(false);
+            setCurrentZoneName(zoneRectangle.name ?? "");
+            // console.log(`Зона с ID: ${zoneRectangle.id} уже имеет прямоугольник, режим рисования выключен.`);
         } else {
-            setSelectedZoneName(null);
             setActiveZoneId(null);
+            setIsDrawingMode(true);
+            setCurrentZoneName("");
+            // console.log(`Зона с ID: ${zoneId} не найдена, режим рисования включен.`);
         }
-        console.log(`[CanvasComponent] Зона с ID: ${zoneId} не найдена, сбрасываем activeZoneId`);
     };
+
+
 
 
 
@@ -464,6 +466,7 @@ const MainMenu = () => {
                             isDrawingMode={isDrawingMode}
                             setActiveIds={setActiveIds}
                             setActiveZoneId={setActiveZoneId}
+                            selectedZoneName={currentZoneName}
 
                         />
 
