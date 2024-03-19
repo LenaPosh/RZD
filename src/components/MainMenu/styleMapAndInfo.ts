@@ -8,7 +8,6 @@ export const InfoAndLegendWrapper = styled.div`
   align-items: center;
   width: 100%;
   margin-bottom: 100px;
-  z-index: 10;
   margin-top: var(--info-container-height);
 `;
 
