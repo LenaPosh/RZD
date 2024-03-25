@@ -532,6 +532,8 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({
 
 
 
+
+
         });
         app.stage.removeChildren();
     }, [app, activeMapUrl]);
