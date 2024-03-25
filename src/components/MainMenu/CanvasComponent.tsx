@@ -529,6 +529,9 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({
             graphicsRef.current = newGraphics;
 
 
+
+
+
         });
         app.stage.removeChildren();
     }, [app, activeMapUrl]);
