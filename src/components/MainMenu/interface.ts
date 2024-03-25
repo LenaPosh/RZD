@@ -5,6 +5,7 @@ export interface TreeNodeData {
     name: string;
     isPseudoElement?: boolean;
     isFloor: boolean;
+    level?: number;
     children?: TreeNodeData[];
 }
 

@@ -48,7 +48,7 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({
     onSelectedZoneNameChange,
     isDeleteMode,
     hoveredZoneId,
-    activeMapId,
+    // activeMapId,
     activeMapUrl,
     isHighlightActive
     }) => {
@@ -59,7 +59,7 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({
     const backgroundRef = useRef<Sprite | null>(null);
     const [selectedRectangle, setSelectedRectangle] = useState<RectangleData | null>(null);
 
-    const [drawingZoneId, setDrawingZoneId] = useState<number | null>(null);
+    const [, setDrawingZoneId] = useState<number | null>(null);
     const startPointRef = useRef<Point | null>(null);
     const currentRectangleRef = useRef<Graphics | null>(null);
     const isDeleteModeRef = useRef(isDeleteMode);
@@ -200,43 +200,43 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({
         setRectangles(savedZones);
     }, [setRectangles]);
 
-    useEffect(() => {
-        if (!app) return;
-
-        rectangles.forEach((rect, index) => {
-            let zoneGraphics = new Graphics();
-            zoneGraphics.label = `zone_${rect.id}`;
-
-            if (!zoneGraphics) {
-                zoneGraphics = new Graphics();
-                zoneGraphics.label = `zone_${rect.id}`;
-                app.stage.addChild(zoneGraphics);
-            }
-
-            zoneGraphics.clear();
-            zoneGraphics.interactive = true;
-
-            const isActive = rect.id === activeZoneId;
-
-            const fillColor = index % 2 === 0 ? 'rgba(0, 0, 0, 0.1)' : 'rgba(143, 255, 0, 0.2)';
-            const fillAlpha = isActive ? 0.5 : 0.3;
-
-            zoneGraphics.stroke({color: 0xFF0000, alpha: 1});
-            zoneGraphics.fill(fillColor, fillAlpha);
-            zoneGraphics.rect(rect.x, rect.y, rect.width, rect.height);
-            zoneGraphics.fill();
-
-            zoneGraphics.on('pointerdown', () => {
-                if (isDeleteModeRef.current) {
-                    removeRectangleById(rect.id);
-                } else {
-                    setActiveZoneId(rect.id);
-                    onZoneClick(rect.id);
-                }
-            });
-        });
-
-    }, [app, rectangles, isDeleteModeRef.current]);
+    // useEffect(() => {
+    //     if (!app) return;
+    //
+    //     rectangles.forEach((rect, index) => {
+    //         let zoneGraphics = new Graphics();
+    //         zoneGraphics.label = `zone_${rect.id}`;
+    //
+    //         if (!zoneGraphics) {
+    //             zoneGraphics = new Graphics();
+    //             zoneGraphics.label = `zone_${rect.id}`;
+    //             app.stage.addChild(zoneGraphics);
+    //         }
+    //
+    //         zoneGraphics.clear();
+    //         zoneGraphics.interactive = true;
+    //
+    //         const isActive = rect.id === activeZoneId;
+    //
+    //         const fillColor = index % 2 === 0 ? 'rgba(0, 0, 0, 0.1)' : 'rgba(143, 255, 0, 0.2)';
+    //         const fillAlpha = isActive ? 0.5 : 0.3;
+    //
+    //         zoneGraphics.stroke({color: 0xFF0000, alpha: 1});
+    //         zoneGraphics.fill(fillColor, fillAlpha);
+    //         zoneGraphics.rect(rect.x, rect.y, rect.width, rect.height);
+    //         zoneGraphics.fill();
+    //
+    //         zoneGraphics.on('pointerdown', () => {
+    //             if (isDeleteModeRef.current) {
+    //                 removeRectangleById(rect.id);
+    //             } else {
+    //                 setActiveZoneId(rect.id);
+    //                 onZoneClick(rect.id);
+    //             }
+    //         });
+    //     });
+    //
+    // }, [app, rectangles, isDeleteModeRef.current]);
 
 
 
@@ -327,8 +327,11 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({
                 zoneGraphics.stroke({width: 2, color: 0x000000, alpha: 1});
             }
 
-            zoneGraphics.fill(index % 2 === 0 ? 'rgba(0, 0, 0, 0.1)' : 'rgba(143, 255, 0, 0.2)', isActive ? 0.5 : 0.3);
-            zoneGraphics.stroke({ width: 3, color: 0xFF0000, alpha: 1 });
+            const fillColor = index % 2 === 0 ? 'rgba(0, 0, 0, 0.1)' : 'rgba(143, 255, 0, 0.2)';
+            const strokeColor = fillColor === 'rgba(0, 0, 0, 0.1)' ? 0x808080 : 0x00FF00;
+
+            zoneGraphics.fill({color: fillColor});
+            zoneGraphics.stroke({ width: 3, color: strokeColor, alpha: 1 });
             zoneGraphics.rect(rect.x, rect.y, rect.width, rect.height);
             // zoneGraphics.fill();
 
@@ -348,7 +351,7 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({
         } else {
             setSelectedRectangle(null);
         }
-
+// eslint-disable-next-line react-hooks/exhaustive-deps
     }, [app, rectangles, activeZoneId, onZoneClick,  setActiveIds, setActiveZoneId, onSelectedZoneNameChange, isDeleteMode]);
 
     // function isInResizeZone(x: number, y: number, rect: ZoneData): boolean {
@@ -391,16 +394,17 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({
 
     interface ZoneGraphics {
         graphics: Graphics;
-        size: number;
+        width: number
+        height: number;
         x: number;
         y: number;
         zoneId: number;
     }
 
     const zonesGraphics = [
-        { zoneId: 2, graphics: new Graphics(), size: 4, x: 40, y: 60 },
-        { zoneId: 3, graphics: new Graphics(), size: 5, x: 350, y: 80 },
-        { zoneId: 4, graphics: new Graphics(), size: 6, x: 840, y: 160 },
+        { zoneId: 2, graphics: new Graphics(), width: 8, height: 3, x: 680, y: 170 },
+        { zoneId: 3, graphics: new Graphics(), width: 2, height: 1.7, x: 1150, y: 10 },
+        { zoneId: 4, graphics: new Graphics(), width: 1.8, height: 1, x: 1050, y: 29 },
     ];
 
 
@@ -413,13 +417,11 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({
         });
     };
 
-
-
     const scale = 51;
 
     const highlightZone = (zoneGraphic: ZoneGraphics, highlight: boolean): void => {
         // console.log(`Подсветка зоны с ID: ${zoneGraphic.zoneId}, состояние подсветки: ${highlight}`);
-        const { graphics, size, x, y, zoneId } = zoneGraphic;
+        const { graphics, width, height, x, y } = zoneGraphic;
 
         if (app && app.stage && !app.stage.children.includes(graphics)) {
             app.stage.addChild(graphics);
@@ -427,12 +429,13 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({
 
         graphics.clear();
 
-        const color = highlight ? 'rgba(0, 0, 0, 0.1)' : 'rgba(143, 255, 0, 0.2)';
-        const alpha = highlight ? 1 : 0.5;
+        graphics.stroke({ color: highlight ? 0xFF0000 : 0x000000, alpha: 1});
 
+        const fillColor = highlight ? 0xFF0000 : 0xCCCCCC;
+        const fillAlpha = highlight ? 0.2 : 0.3;
         graphics
-            .fill(color, alpha)
-            .rect(x, y, size * scale, size * scale)
+            .fill({color: fillColor, alpha:fillAlpha})
+            .rect(x, y, width * scale, height * scale)
             .fill();
 
         // console.log(`Зона ${zoneId} подсвечена`);
@@ -472,29 +475,31 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({
         } else {
             resetHighlight();
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [hoveredZoneId, isHighlightActive]);
 
-    //
-    // useEffect(() => {
-    //
-    //     if (app) {
-    //         console.log('Добавление графических объектов на app.stage');
-    //         zonesGraphics.forEach(zoneGraphic => {
-    //             if (!app.stage.children.includes(zoneGraphic.graphics)) {
-    //                 app.stage.addChild(zoneGraphic.graphics);
-    //             }
-    //         });
-    //
-    //         app.renderer.render(app.stage);
-    //     }
-    //
-    // }, [app]);
+
+    useEffect(() => {
+
+        if (app) {
+            console.log('Добавление графических объектов на app.stage');
+            zonesGraphics.forEach(zoneGraphic => {
+                if (!app.stage.children.includes(zoneGraphic.graphics)) {
+                    app.stage.addChild(zoneGraphic.graphics);
+                }
+            });
+
+            app.renderer.render(app.stage);
+        }
+// eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [app]);
 
     useEffect(() => {
         // console.log(`isHighlightActive changed to ${isHighlightActive}. Will ${isHighlightActive ? 'highlight' : 'reset'} zones.`);
         if (!isHighlightActive) {
             resetHighlight();
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isHighlightActive, app]);
 
 

@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, { useState} from 'react';
 import {GlobalStyle} from "../TopMenu";
 import { ReactComponent as ArrowUpSVG } from '../icons/arrowUp.svg';
 import {
@@ -59,19 +59,37 @@ const Tree: React.FC<TreeProps> = React.memo(({
     const [collapsed, setCollapsed] = React.useState(false);
     const isPseudoElement = data.isPseudoElement || level > 1;
     const hasChildren = !isPseudoElement && !!data.children && data.children.length > 0;
+    const [isParentClicked, setIsParentClicked] = useState(false);
 
+
+    // const handleToggle = () => {
+    //     const isZoneOrPseudoElement = !data.isFloor && (data.isPseudoElement || level > 1);
+    //     if (data.isFloor || isZoneOrPseudoElement) {
+    //         onFloorClick(data.id, data);
+    //     }
+    //     if (level === 1) {
+    //         setIsParentClicked(!isParentClicked);
+    //     }
+    // };
     const handleToggle = () => {
-        const isZoneOrPseudoElement = !data.isFloor && (data.isPseudoElement || level > 1);
+        setCollapsed(!collapsed);
 
-        if (data.isFloor || isZoneOrPseudoElement) {
-            onFloorClick(data.id, data);
+        if (level === 1) {
+            setIsParentClicked(!isParentClicked);
         }
-        // setCollapsed(!collapsed);
+
+        onFloorClick(data.id, data);
     };
+
+
 
     const handleArrowClick = (e: React.MouseEvent<HTMLElement>) => {
         e.stopPropagation();
         setCollapsed(!collapsed);
+
+        if (level === 1) {
+            setIsParentClicked(!collapsed);
+        }
         onFloorClick(data.id, data);
     };
 
@@ -124,20 +142,6 @@ const Tree: React.FC<TreeProps> = React.memo(({
 
     const isParentOfActiveNode = checkIsParentOfActive(data.id, activeIds, data);
 
-    const findAllChildrenIds = (node: TreeNodeData, ids: Array<number> = []): Array<number> => {
-
-        ids.push(+node.id);
-        if (node.children) {
-            node.children.forEach(child => {
-                console.log(`Поиск детей для узла ${child.id}`);
-                findAllChildrenIds(child, ids);
-            });
-        }
-        console.log(`Найдены все дети для узла ${node.id}:`, ids);
-        return ids;
-    };
-
-
 
 
     return (
@@ -148,7 +152,7 @@ const Tree: React.FC<TreeProps> = React.memo(({
                     $isFloor={data.isFloor}
                     $level={level}
                     onClick={handleToggle}
-                    $isActive={activeIds.includes(data.id) || isParentOfActiveNode}
+                    $isActive={activeIds.includes(data.id)}
                     $activeIds={activeIds}
                     $onFloorClick={onFloorClick}
                     $isParentActive={isParentActive || isParentOfActiveNode}
@@ -176,19 +180,16 @@ const Tree: React.FC<TreeProps> = React.memo(({
 
                             {data.name}
                         </TreeText>
-                        {level === 1 && hasChildren && (
+                        {level === 1 && hasChildren && isParentClicked && (
                             <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
-                                {!activeIds.includes(Number(data.id)) && (
-                                    <Button onClick={() => {
-
-                                        onNavigateToZone?.(Number(data.id));
-                                        // setActiveFloor(data.id);
-                                    }}>
-                                        Перейти
-                                    </Button>
-                                )}
+                                <Button onClick={() => {
+                                    onNavigateToZone?.(Number(data.id));
+                                }}>
+                                    Перейти
+                                </Button>
                             </div>
                         )}
+
                         {data.isPseudoElement && renderActions && renderActions(data)}
                     </div>
                     <TreeIcon $hasChildren={hasChildren} onClick={handleArrowClick}>
@@ -264,24 +265,25 @@ const MainMenu = () => {
         setActiveFloor(floorId);
         setActiveNode(node ? node : null);
 
-        setActiveIds(prevActiveIds => {
-            const newActiveIds = [...prevActiveIds];
+        if (node && node.children) {
+            const isParentNode = typeof node.isFloor !== 'undefined' && !node.isFloor;
 
-            if (!newActiveIds.includes(floorId)) {
-                newActiveIds.push(floorId);
+            if (isParentNode) {
+                const childIds = node.children?.map(child => child.id) || [];
+                setActiveIds([floorId, ...childIds]);
             }
+        } else {
+            setActiveIds(prevActiveIds => {
+                const newActiveIds = prevActiveIds.includes(floorId)
+                    ? prevActiveIds.filter(id => id !== floorId)
+                    : [...prevActiveIds, floorId];
+                return newActiveIds;
+            });
+        }
 
-            if (node && node.children && node.children.length > 0) {
-                const childIds = node.children.map(child => child.id);
-                newActiveIds.push(...childIds);
-            }
 
-            console.log('Обновленные activeIds:', newActiveIds);
-            return Array.from(new Set(newActiveIds));
-        });
 
-        console.log('activeIds после обновления:', activeIds);
-
+        // Оставляем логику прямоугольников на карте без изменений
         if (node && node.isPseudoElement) {
             const numericFloorId = typeof floorId === 'string' ? parseInt(floorId, 10) : floorId;
             const zoneRectangle = findZoneRectangle(numericFloorId);
@@ -297,6 +299,7 @@ const MainMenu = () => {
             }
         }
     };
+
 
 
     const handleZoneClick = (zoneId: number | null) => {
