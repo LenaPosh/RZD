@@ -39,7 +39,7 @@ export const Content = styled.div`
   flex-direction: row;
   max-height: 85%;
   padding: 10px;
-  gap: 10px;
+  //gap: 10px;
   flex-grow: 1;
   position: relative;
  

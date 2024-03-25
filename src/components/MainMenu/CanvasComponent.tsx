@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {Application, Assets, Graphics, Sprite, Texture} from 'pixi.js';
-import imagePlan from '../icons/home.jpg';
+import imagePlan from '../icons/vokzal1 - ID-1.png';
 import {ZoneData} from "./MainMenu";
 
 interface Point {
@@ -26,11 +26,32 @@ interface CanvasComponentProps {
     setActiveIds: React.Dispatch<React.SetStateAction<Array<number | string>>>;
     selectedZoneName: string | null;
     onSelectedZoneNameChange: (newName: string) => void;
+    isDeleteMode: boolean;
+    // resetCurrentZoneData: () => void;
+    // resetSelectedZoneName: () => void;
+    hoveredZoneId: number | null;
+    activeMapId: number | null;
+    activeMapUrl: string;
+    isHighlightActive: boolean;
 }
 
-
-const CanvasComponent: React.FC<CanvasComponentProps> = ({rectangles, setRectangles, onTempRectangleChange, onZoneClick, activeZoneId, isDrawingMode,   setActiveZoneId,
-                                                             setActiveIds, selectedZoneName, onSelectedZoneNameChange }) => {
+const CanvasComponent: React.FC<CanvasComponentProps> = ({
+    rectangles,
+    setRectangles,
+    onTempRectangleChange,
+    onZoneClick,
+    activeZoneId,
+    isDrawingMode,
+    setActiveZoneId,
+    setActiveIds,
+    selectedZoneName,
+    onSelectedZoneNameChange,
+    isDeleteMode,
+    hoveredZoneId,
+    activeMapId,
+    activeMapUrl,
+    isHighlightActive
+    }) => {
 
     const canvasRef = useRef<HTMLDivElement | null>(null);
     const [app, setApp] = useState<Application | null>(null);
@@ -41,6 +62,9 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({rectangles, setRectang
     const [drawingZoneId, setDrawingZoneId] = useState<number | null>(null);
     const startPointRef = useRef<Point | null>(null);
     const currentRectangleRef = useRef<Graphics | null>(null);
+    const isDeleteModeRef = useRef(isDeleteMode);
+    // const [isResizingMode, setIsResizingMode] = useState(false);
+    // const resizingStartPoint = useRef<Point | null>(null);
 
     useEffect(() => {
         const newApp = new Application();
@@ -72,8 +96,9 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({rectangles, setRectang
             newApp.stage.addChild(graphicsRef.current);
 
             setApp(newApp);
+            console.log("PixiJS App initialized");
+
         })();
-        // console.log("PixiJS Application has been initialized.");
         return () => {
             if (app) {
                 app.destroy(true);
@@ -82,45 +107,38 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({rectangles, setRectang
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-
+    useEffect(() => {
+        isDeleteModeRef.current = isDeleteMode;
+        console.log(`Delete mode is now ${isDeleteMode ? 'ON' : 'OFF'}.`);
+    }, [isDeleteMode]);
 
     useEffect(() => {
         const currentBackground = backgroundRef.current;
-        // const handleClick = (zoneId: number | null) => {
-        //     onZoneClick(zoneId);
-        // };
+
         if (!app || !currentBackground) return;
 
         const background = currentBackground;
-        // let startPoint: Point | null = null;
-        // let currentRectangle: Graphics | null = null;
 
         const onPointerDown = (event: any) => {
-            console.log("onPointerDown called", { event });
             const existingRectangle = rectangles.find(rect => rect.zoneId === activeZoneId);
-            console.log("existingRectangle:", existingRectangle, "isDrawingMode:", isDrawingMode);
             if (existingRectangle || !isDrawingMode) {
-                console.log(`Drawing in zone ${activeZoneId} is not allowed. Existing rectangle:`, existingRectangle, "Is drawing mode:", isDrawingMode);
                 return;
             }
 
             const { x, y } = event.data.global;
             startPointRef.current = { x, y };
-            console.log(`Setting startPoint at (${x}, ${y}) with activeZoneId: ${activeZoneId}`);
             currentRectangleRef.current = new Graphics();
-            console.log(`Creating new Graphics object:`, currentRectangleRef.current);
             app.stage.addChild(currentRectangleRef.current);
+            console.log(`Pointer down at (${x}, ${y}). Is drawing mode? ${isDrawingMode}`);
             setDrawingZoneId(activeZoneId);
         };
 
         const onPointerMove = (event: any) => {
             if (!startPointRef.current || !currentRectangleRef.current) {
-                console.log("onPointerMove called but startPoint or currentRectangle is null");
                 return;
             }
-            console.log("onPointerMove called but startPoint or currentRectangle is null");
             const { x, y } = event.data.global;
-            console.log("onPointerMove", { x, y });
+
             const width = x - startPointRef.current.x;
             const height = y - startPointRef.current.y;
 
@@ -137,10 +155,7 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({rectangles, setRectang
         };
 
         const onPointerUp = (event: any) => {
-            console.log("onPointerUp called", { event });
-
             if (!startPointRef.current || !currentRectangleRef.current) {
-                console.log("onPointerUp but startPoint or currentRectangle is null");
                 return;
             }
             const fillColor = rectangles.length % 2 === 0 ? 'rgba(0, 0, 0, 0.1)' : 'rgba(143, 255, 0, 0.2)';
@@ -155,17 +170,16 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({rectangles, setRectang
                 name: selectedZoneName ?? "Новая зона",
                 color: fillColor,
             };
+            // console.log(`Pointer up. Rectangle created: `, newRect);
             onTempRectangleChange(newRect);
-            // console.log(`Pointer up with newRect:`, newRect);
-            setRectangles([...rectangles, newRect]);
 
             startPointRef.current = null;
             currentRectangleRef.current = null;
+
             if (newRect && typeof newRect.zoneId === 'number') {
                 setRectangles([...rectangles, newRect]);
                 setDrawingZoneId(null);
             }
-            console.log(`Pointer up with newRect:`, newRect);
         };
 
         background.on('pointerdown', onPointerDown);
@@ -187,16 +201,90 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({rectangles, setRectang
     }, [setRectangles]);
 
     useEffect(() => {
-        if (drawingZoneId !== null) {
-            setActiveZoneId(drawingZoneId);
-            setActiveIds([drawingZoneId]);
+        if (!app) return;
+
+        rectangles.forEach((rect, index) => {
+            let zoneGraphics = new Graphics();
+            zoneGraphics.label = `zone_${rect.id}`;
+
+            if (!zoneGraphics) {
+                zoneGraphics = new Graphics();
+                zoneGraphics.label = `zone_${rect.id}`;
+                app.stage.addChild(zoneGraphics);
+            }
+
+            zoneGraphics.clear();
+            zoneGraphics.interactive = true;
+
+            const isActive = rect.id === activeZoneId;
+
+            const fillColor = index % 2 === 0 ? 'rgba(0, 0, 0, 0.1)' : 'rgba(143, 255, 0, 0.2)';
+            const fillAlpha = isActive ? 0.5 : 0.3;
+
+            zoneGraphics.stroke({color: 0xFF0000, alpha: 1});
+            zoneGraphics.fill(fillColor, fillAlpha);
+            zoneGraphics.rect(rect.x, rect.y, rect.width, rect.height);
+            zoneGraphics.fill();
+
+            zoneGraphics.on('pointerdown', () => {
+                if (isDeleteModeRef.current) {
+                    removeRectangleById(rect.id);
+                } else {
+                    setActiveZoneId(rect.id);
+                    onZoneClick(rect.id);
+                }
+            });
+        });
+
+    }, [app, rectangles, isDeleteModeRef.current]);
+
+
+
+    //
+    // useEffect(() => {
+    //     if (drawingZoneId !== null) {
+    //         setActiveZoneId(drawingZoneId);
+    //         setActiveIds([drawingZoneId]);
+    //     }
+    // }, [drawingZoneId, setActiveZoneId, setActiveIds]);
+
+
+
+    const removeRectangleById = (rectId: number) => {
+        // console.log(`Attempting to remove rectangle with ID: ${rectId}`);
+
+        if (!app) {
+            // console.log("App is not initialized");
+            return;
         }
-    }, [drawingZoneId, setActiveZoneId, setActiveIds]);
+
+
+        const graphicsToRemove = app.stage.children.find(child => child.label === `zone_${rectId}`);
+        if (graphicsToRemove) {
+            app.stage.removeChild(graphicsToRemove);
+            // console.log(`Removed rectangle with ID: ${rectId} from the stage.`);
+        }
+
+        const updatedRectangles = rectangles.filter(rect => {
+            const toKeep = rect.id !== rectId;
+            console.log(`Filtering rect ID: ${rect.id}, Keep: ${toKeep}`);
+            return toKeep;
+        });
+        setRectangles(prevRectangles => prevRectangles.filter(rect => String(rect.id) !== String(rectId)));
+
+        localStorage.setItem('savedZones', JSON.stringify(updatedRectangles));
+    };
+
+    useEffect(() => {
+
+        localStorage.setItem('savedZones', JSON.stringify(rectangles));
+
+    }, [rectangles]);
 
 
     useEffect(() => {
         if (!app) return;
-
+        // console.log("Начало useEffect, isDeleteMode:", isDeleteMode);
         rectangles.forEach((rect, index) => {
             let zoneGraphics = app.stage.children.find(c => c.label === `zone_${rect.id}`) as Graphics;
 
@@ -205,25 +293,32 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({rectangles, setRectang
                 zoneGraphics.label = `zone_${rect.id}`;
                 app.stage.addChild(zoneGraphics);
                 zoneGraphics.interactive = true;
-                zoneGraphics.on('pointerdown', () => {
-                    console.log(`Zone clicked: ${rect.id}`, rect);
-                    setActiveZoneId(rect.id);
-                    if (typeof rect.zoneId === 'number') {
-                        setActiveIds([rect.zoneId]);
+
+
+                const handleSelect = () => {
+                    if (!isDeleteModeRef.current) {
+                        setActiveZoneId(rect.id);
+                        setActiveIds([rect.zoneId].filter((id): id is number => id !== null && id !== undefined));
                         const currentZone = rectangles.find(r => r.id === rect.id);
-                        if (currentZone && currentZone.name) {
-                            console.log(`Updating selectedZoneName to: ${currentZone.name}`);
-                            onSelectedZoneNameChange(currentZone.name);
-                        } else {
-                            console.log("Zone name not found, setting to 'Неизвестная зона'");
-                            onSelectedZoneNameChange("Неизвестная зона");
-                        }
+                        onSelectedZoneNameChange(currentZone?.name ?? "Неизвестная зона");
                     }
+                };
+
+                // zoneGraphics.off('pointerdown');
+
+                zoneGraphics.on('pointerdown', () => {
+                    console.log(`Clicked on rectangle with ID: ${rect.id}, isDeleteModeRef.current at click:`, isDeleteModeRef.current);
+                    if (isDeleteModeRef.current) {
+                        console.log(`Removing rectangle with ID: ${rect.id}`);
+                        removeRectangleById(rect.id);
+                        return;
+                    }
+                    handleSelect();
                 });
+                // app.stage.addChild(zoneGraphics);
             }
 
             const isActive = rect.id === activeZoneId;
-
 
             zoneGraphics.clear();
             if (rect.id === activeZoneId) {
@@ -254,33 +349,192 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({rectangles, setRectang
             setSelectedRectangle(null);
         }
 
+    }, [app, rectangles, activeZoneId, onZoneClick,  setActiveIds, setActiveZoneId, onSelectedZoneNameChange, isDeleteMode]);
 
-    }, [app, rectangles, activeZoneId, onZoneClick, setActiveIds, setActiveZoneId, onSelectedZoneNameChange]);
-
-    // useEffect(() => {
-    //     const activeRect = activeZoneId !== null ? rectangles.find(rect => rect.id === activeZoneId) : undefined;
+    // function isInResizeZone(x: number, y: number, rect: ZoneData): boolean {
+    //     const zoneSize = 10;
+    //     const inXZone = x > (rect.x + rect.width - zoneSize) && x < (rect.x + rect.width);
+    //     const inYZone = y > (rect.y + rect.height - zoneSize) && y < (rect.y + rect.height);
+    //     return inXZone && inYZone;
+    // }
     //
-    //     if (activeRect && activeRect.name) {
-    //         const rectData: RectangleData = {
-    //             ...activeRect,
-    //             color: activeRect.color || 'defaultColor'
-    //         };
-    //         setSelectedRectangle(rectData);
-    //     } else {
-    //         setSelectedRectangle(null);
+    //
+    // function handleRectanglePointerDown(event: any, rect: any) {
+    //     const { x, y } = event.data.global;
+    //     if (isInResizeZone(x, y, rect)) {
+    //         setIsResizingMode(true);
+    //         resizingStartPoint.current = { x, y };
+    //         setActiveZoneId(rect.id);
     //     }
-    //     const activeZone = rectangles.find(rect => rect.id === activeZoneId);
-    //     if (activeZone) {
-    //         onSelectedZoneNameChange(activeZone.name ?? "Неизвестная зона");
+    // }
+    //
+    // function handlePointerMove(event: any) {
+    //     if (!isResizingMode || !resizingStartPoint.current || activeZoneId == null) return;
+    //
+    //     const { x, y } = event.data.global;
+    //     const dx = x - resizingStartPoint.current.x;
+    //     const dy = y - resizingStartPoint.current.y;
+    //
+    //     const newRectangles = rectangles.map(rect => {
+    //         if (rect.id !== activeZoneId) return rect;
+    //         return { ...rect, width: rect.width + dx, height: rect.height + dy };
+    //     });
+    //     setRectangles(newRectangles);
+    //     resizingStartPoint.current = { x, y };
+    // }
+    //
+    // function handlePointerUp() {
+    //     if (!isResizingMode) return;
+    //     setIsResizingMode(false);
+    //     resizingStartPoint.current = null;
+    // }
+
+    interface ZoneGraphics {
+        graphics: Graphics;
+        size: number;
+        x: number;
+        y: number;
+        zoneId: number;
+    }
+
+    const zonesGraphics = [
+        { zoneId: 2, graphics: new Graphics(), size: 4, x: 40, y: 60 },
+        { zoneId: 3, graphics: new Graphics(), size: 5, x: 350, y: 80 },
+        { zoneId: 4, graphics: new Graphics(), size: 6, x: 840, y: 160 },
+    ];
+
+
+    const findGraphicsByZoneId = (zoneId: number) => {
+        // console.log(`Ищем графику для зоны с ID: ${zoneId}`);
+        return zonesGraphics.find(zoneGraphic => {
+            const found = zoneGraphic.zoneId === zoneId;
+            console.log(`Зона ${zoneGraphic.zoneId} ${found ? 'найдена' : 'не найдена'}`);
+            return found;
+        });
+    };
+
+
+
+    const scale = 51;
+
+    const highlightZone = (zoneGraphic: ZoneGraphics, highlight: boolean): void => {
+        // console.log(`Подсветка зоны с ID: ${zoneGraphic.zoneId}, состояние подсветки: ${highlight}`);
+        const { graphics, size, x, y, zoneId } = zoneGraphic;
+
+        if (app && app.stage && !app.stage.children.includes(graphics)) {
+            app.stage.addChild(graphics);
+        }
+
+        graphics.clear();
+
+        const color = highlight ? 'rgba(0, 0, 0, 0.1)' : 'rgba(143, 255, 0, 0.2)';
+        const alpha = highlight ? 1 : 0.5;
+
+        graphics
+            .fill(color, alpha)
+            .rect(x, y, size * scale, size * scale)
+            .fill();
+
+        // console.log(`Зона ${zoneId} подсвечена`);
+
+        if (app) {
+            app.renderer.render(app.stage);
+        }
+    };
+
+
+
+    const resetHighlight = () => {
+        console.log('Сброс подсветки для всех зон');
+        zonesGraphics.forEach(zoneGraphic => {
+            const { graphics, zoneId } = zoneGraphic;
+
+            console.log(`Сбрасываем подсветку для зоны с ID: ${zoneId}`);
+            graphics.clear();
+            if (app && app.stage && app.stage.children.includes(graphics)) {
+                app.stage.removeChild(graphics);
+            }
+
+
+        });
+        if (app && app.stage) {
+            app.renderer.render(app.stage);
+        }
+    };
+
+
+    useEffect(() => {
+        if (hoveredZoneId && isHighlightActive) {
+            const zoneToHighlight = findGraphicsByZoneId(hoveredZoneId);
+            if (zoneToHighlight) {
+                highlightZone(zoneToHighlight, true);
+            }
+        } else {
+            resetHighlight();
+        }
+    }, [hoveredZoneId, isHighlightActive]);
+
+    //
+    // useEffect(() => {
+    //
+    //     if (app) {
+    //         console.log('Добавление графических объектов на app.stage');
+    //         zonesGraphics.forEach(zoneGraphic => {
+    //             if (!app.stage.children.includes(zoneGraphic.graphics)) {
+    //                 app.stage.addChild(zoneGraphic.graphics);
+    //             }
+    //         });
+    //
+    //         app.renderer.render(app.stage);
     //     }
-    // }, [activeZoneId, rectangles, onSelectedZoneNameChange]);
+    //
+    // }, [app]);
+
+    useEffect(() => {
+        // console.log(`isHighlightActive changed to ${isHighlightActive}. Will ${isHighlightActive ? 'highlight' : 'reset'} zones.`);
+        if (!isHighlightActive) {
+            resetHighlight();
+        }
+    }, [isHighlightActive, app]);
+
+
+    useEffect(() => {
+        if (!app || !activeMapUrl) return;
+
+        // resetHighlight();
+
+        if (backgroundRef.current) {
+            app.stage.removeChild(backgroundRef.current);
+            backgroundRef.current.destroy();
+        }
+        // console.log(`Active map URL changed to ${activeMapUrl}. Will reset highlight and load new background.`);
+        Assets.load(activeMapUrl).then(() => {
+            const texture = Texture.from(activeMapUrl);
+            const background = new Sprite(texture);
+            background.width = app.screen.width;
+            background.height = app.screen.height;
+            background.interactive = true;
+            app.stage.addChildAt(background, 0);
+            backgroundRef.current = background;
+
+
+
+            const newGraphics = new Graphics();
+            app.stage.addChild(newGraphics);
+            graphicsRef.current = newGraphics;
+
+
+        });
+        app.stage.removeChildren();
+    }, [app, activeMapUrl]);
+
 
 
 
 
     return (
         <>
-            <div ref={canvasRef} style={{ width: '100%', height: '100%', overflow: 'hidden' }} />;
+            <div ref={canvasRef} style={{ width: '100%', height: '100%', overflow: 'hidden' }} />
             {selectedRectangle && selectedZoneName && (
                 <div style={{
                     position: 'absolute',

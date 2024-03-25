@@ -30,24 +30,32 @@ import {BRIEF_INFO_URL} from "./BriefInfo";
 import {BriefInfo} from "./BriefInfo";
 import CanvasComponent from "./CanvasComponent";
 // import axios from "axios";
+import { FaPencilRuler } from "react-icons/fa";
+import { IoSaveOutline } from "react-icons/io5";
+import { RiArrowGoBackFill } from "react-icons/ri";
+import { LiaPenSolid } from "react-icons/lia";
+import { RiDeleteBin6Line } from "react-icons/ri";
+import zoneDataImg from "./zoneData";
 
 
 
 // const TREE_DATA_URL = "";
 
-const Tree: React.FC<TreeProps> = ({
+const Tree: React.FC<TreeProps> = React.memo(({
+    data,
+    level = 0,
+    onFloorClick,
+    activeFloorId,
+    isParentActive,
+    activeIds,
+    activeZoneId,
+    renderActions,
+    onZoneHover,
+    onNavigateToZone,
+    setActiveFloor
+    }) => {
 
-                                       data,
-                                       level = 0,
-                                       onFloorClick,
-                                       activeFloorId,
-                                       isParentActive,
-                                       activeIds,
-                                       activeZoneId,
-                                       renderActions
-                                   }) => {
-
-    // console.log("Рендер узла:", data.id, "Активные ID:", activeIds);
+    console.log("Рендер узла:", data.id, "Активные ID:", activeIds);
     const [collapsed, setCollapsed] = React.useState(false);
     const isPseudoElement = data.isPseudoElement || level > 1;
     const hasChildren = !isPseudoElement && !!data.children && data.children.length > 0;
@@ -58,9 +66,8 @@ const Tree: React.FC<TreeProps> = ({
         if (data.isFloor || isZoneOrPseudoElement) {
             onFloorClick(data.id, data);
         }
-        setCollapsed(!collapsed);
+        // setCollapsed(!collapsed);
     };
-    // console.log(data.name, data.isPseudoElement);
 
     const handleArrowClick = (e: React.MouseEvent<HTMLElement>) => {
         e.stopPropagation();
@@ -68,25 +75,83 @@ const Tree: React.FC<TreeProps> = ({
         onFloorClick(data.id, data);
     };
 
+    const handleMouseEnter = (zoneId: number) => {
+        if (activeZoneId !== zoneId) {
+            console.log('Мышь наведена на зону с идентификатором:', zoneId);
+            onZoneHover(zoneId);
+        }
+    };
+
+
+    const handleMouseLeave = () => {
+        console.log('Мышь покинула зону');
+        onZoneHover(null);
+    };
+
+    const containsActiveId = (node: TreeNodeData, activeIds: Array<number | string>): boolean => {
+        console.log(`Checking if active IDs contain node: ${node.id}`);
+
+        if (activeIds.includes(node.id)) {
+            console.log(`Node ${node.id} is active`);
+            return true;
+        }
+        if (node.children) {
+            return node.children.some(child => containsActiveId(child, activeIds));
+        }
+        return false;
+    };
+
+
+    const checkIsParentOfActive = (nodeId: number | string, activeIds: Array<number | string>, currentNode: TreeNodeData): boolean => {
+        console.log(`Checking if node ${nodeId} is parent of an active node`);
+        const findNodeById = (node: TreeNodeData, id: number | string): TreeNodeData | null => {
+            if (node.id === id) return node;
+            if (node.children) {
+                for (const child of node.children) {
+                    const found = findNodeById(child, id);
+                    if (found) return found;
+                }
+            }
+            return null;
+        };
+
+        const node = findNodeById(currentNode, nodeId);
+        const isParentActive = !!node && containsActiveId(node, activeIds);
+        console.log(`Is node ${nodeId} a parent of active node: ${isParentActive}`);
+        return isParentActive;
+
+    };
+
+    const isParentOfActiveNode = checkIsParentOfActive(data.id, activeIds, data);
+
+    const findAllChildrenIds = (node: TreeNodeData, ids: Array<number> = []): Array<number> => {
+
+        ids.push(+node.id);
+        if (node.children) {
+            node.children.forEach(child => {
+                console.log(`Поиск детей для узла ${child.id}`);
+                findAllChildrenIds(child, ids);
+            });
+        }
+        console.log(`Найдены все дети для узла ${node.id}:`, ids);
+        return ids;
+    };
+
+
 
 
     return (
         <ComplexContainer>
             <TreeGroupContainer $isActive={activeIds.includes(data.id)  || data.id === activeZoneId}>
-            {/*<TreeGroupContainer*/}
-            {/*    isActive={*/}
-            {/*        activeIds.includes(data.id) ||*/}
-            {/*        activeIds.some(id => data.children?.some(child => child.id === id))*/}
-            {/*    }*/}
-            {/*>*/}
+
                 <TreeNode
                     $isFloor={data.isFloor}
                     $level={level}
                     onClick={handleToggle}
-                    $isActive={activeIds.includes(data.id)}
-                    $isParentActive={isParentActive || activeIds.includes(data.id)}
+                    $isActive={activeIds.includes(data.id) || isParentOfActiveNode}
                     $activeIds={activeIds}
                     $onFloorClick={onFloorClick}
+                    $isParentActive={isParentActive || isParentOfActiveNode}
                 >
                     {level > 0 && !data.isFloor && (level === 1 ? <StyledCircleGreenSVG/> : <StyledCircleVioletEmptySVG/>)}
                     <div style={{ flex: 1 }}>
@@ -97,9 +162,33 @@ const Tree: React.FC<TreeProps> = ({
                             $activeIds={activeIds}
                             $onFloorClick={onFloorClick}
                             onClick={handleToggle}
+                            onMouseEnter={() => {
+                                if (!activeZoneId) {
+                                    handleMouseEnter(Number(data.id));
+                                }
+                            }}
+                            onMouseLeave={() => {
+                                if (!activeZoneId) {
+                                    handleMouseLeave();
+                                }
+                            }}
                         >
+
                             {data.name}
                         </TreeText>
+                        {level === 1 && hasChildren && (
+                            <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+                                {!activeIds.includes(Number(data.id)) && (
+                                    <Button onClick={() => {
+
+                                        onNavigateToZone?.(Number(data.id));
+                                        // setActiveFloor(data.id);
+                                    }}>
+                                        Перейти
+                                    </Button>
+                                )}
+                            </div>
+                        )}
                         {data.isPseudoElement && renderActions && renderActions(data)}
                     </div>
                     <TreeIcon $hasChildren={hasChildren} onClick={handleArrowClick}>
@@ -116,10 +205,14 @@ const Tree: React.FC<TreeProps> = ({
                                 level={level + 1}
                                 onFloorClick={onFloorClick}
                                 activeFloorId={activeFloorId}
-                                isParentActive={isParentActive || data.id === activeFloorId}
+                                isParentActive={isParentActive || isParentOfActiveNode}
                                 activeIds={activeIds}
                                 activeZoneId={activeZoneId}
                                 renderActions={renderActions}
+                                onZoneHover={onZoneHover}
+                                onNavigateToZone={onNavigateToZone}
+                                setActiveFloor={setActiveFloor}
+
                             />
                         ))}
 
@@ -130,7 +223,7 @@ const Tree: React.FC<TreeProps> = ({
         </ComplexContainer>
 
     );
-};
+});
 
 
 
@@ -156,22 +249,38 @@ const MainMenu = () => {
     const [activeZoneId, setActiveZoneId] = useState<number | null>(null);
     const [, setSelectedZoneName] = useState<string | null>(null);
     const [currentZoneName, setCurrentZoneName] = useState<string | null>(null);
-
+    const [isDeleteMode, setIsDeleteMode] = useState(false);
+    const [hoveredZoneId, setHoveredZoneId] = useState<number | null>(null);
+    const [activeMapId, setActiveMapId] = useState<number | null>(null);
+    const [activeMapUrl, setActiveMapUrl] = useState("");
+    const [isHighlightActive, setIsHighlightActive] = useState(true);
 
     const findZoneRectangle = (zoneId: number | null) => {
         return rectangles.find(rect => rect.zoneId === zoneId);
     };
 
     const handleFloorClick = (floorId: number | string, node?: TreeNodeData): void => {
-        console.log(`handleFloorClick called with floorId: ${floorId} and node:`, node);
+        console.log(`handleFloorClick вызван с floorId: ${floorId}`);
         setActiveFloor(floorId);
         setActiveNode(node ? node : null);
 
-        let newActiveIds = [floorId];
-        if (node && node.children && node.children.length > 0) {
-            newActiveIds = newActiveIds.concat(findAllChildrenIds(node));
-        }
-        setActiveIds(newActiveIds);
+        setActiveIds(prevActiveIds => {
+            const newActiveIds = [...prevActiveIds];
+
+            if (!newActiveIds.includes(floorId)) {
+                newActiveIds.push(floorId);
+            }
+
+            if (node && node.children && node.children.length > 0) {
+                const childIds = node.children.map(child => child.id);
+                newActiveIds.push(...childIds);
+            }
+
+            console.log('Обновленные activeIds:', newActiveIds);
+            return Array.from(new Set(newActiveIds));
+        });
+
+        console.log('activeIds после обновления:', activeIds);
 
         if (node && node.isPseudoElement) {
             const numericFloorId = typeof floorId === 'string' ? parseInt(floorId, 10) : floorId;
@@ -184,12 +293,26 @@ const MainMenu = () => {
             } else {
                 setActiveZoneId(numericFloorId);
                 setIsDrawingMode(true);
-                // console.log("setCurrentZoneName called from handleZoneClick", node.name);
                 setCurrentZoneName(node.name);
             }
-        } else {
-            setActiveZoneId(null);
+        }
+    };
+
+
+    const handleZoneClick = (zoneId: number | null) => {
+        console.log(`handleZoneClick вызван с zoneId: ${zoneId}`);
+        const zoneRectangle = rectangles.find(rect => rect.zoneId === zoneId);
+        if (zoneRectangle) {
+            setActiveZoneId(zoneRectangle.id);
             setIsDrawingMode(false);
+            setSelectedZoneName(zoneRectangle.name ?? "");
+            console.log(`Зона ${zoneRectangle.id} уже имеет прямоугольник`);
+        } else {
+            console.log(`Зона ${zoneId} не найдена, включаем режим рисования`);
+            setActiveZoneId(null);
+            setIsDrawingMode(true);
+            setSelectedZoneName("");
+            // console.log(`Зона с ID: ${zoneId} не найдена, режим рисования включен.`);
         }
     };
 
@@ -207,55 +330,117 @@ const MainMenu = () => {
 
 
     const handleSaveZone = () => {
-        console.log("handleSaveZone called");
+        console.log('Вызов handleSaveZone');
         if (currentZoneData && currentZoneName) {
-            const newZone = {
-                ...currentZoneData,
-                name: currentZoneName
-            };
-            const updatedZones = [...rectangles, newZone];
+            const index = rectangles.findIndex(rect => rect.id === currentZoneData.id);
+            let updatedZones;
+            if (index !== -1) {
+                updatedZones = [...rectangles];
+                updatedZones[index] = { ...currentZoneData, name: currentZoneName };
+            } else {
+                updatedZones = [...rectangles, { ...currentZoneData, name: currentZoneName }];
+            }
+
+            console.log('Обновленный список зон:', updatedZones);
             localStorage.setItem('savedZones', JSON.stringify(updatedZones));
             setRectangles(updatedZones);
+            console.log('Зоны сохранены в localStorage');
             setCurrentZoneData(null);
-            setSelectedZoneName(newZone.name);
-            setActiveIds([newZone.id]);
-        }
-    };
-
-
-
-
-    useEffect(() => {
-        const savedZones = JSON.parse(localStorage.getItem('savedZones') || '[]');
-        setRectangles(savedZones);
-    }, []);
-
-    const handleZoneClick = (zoneId: number | null) => {
-        console.log(`handleZoneClick called with ID: ${zoneId}`);
-        const zoneRectangle = rectangles.find(rect => rect.zoneId === zoneId);
-        if (zoneRectangle) {
-            setActiveZoneId(zoneRectangle.id);
-            setIsDrawingMode(false);
-            setSelectedZoneName(zoneRectangle.name ?? "");
-            // console.log(`Зона с ID: ${zoneRectangle.id} уже имеет прямоугольник, режим рисования выключен.`);
+            setSelectedZoneName(null);
+            setActiveIds([]);
         } else {
-            setActiveZoneId(null);
-            setIsDrawingMode(true);
-            setSelectedZoneName("");
-            // console.log(`Зона с ID: ${zoneId} не найдена, режим рисования включен.`);
+            console.log('Данные зоны или имя зоны отсутствуют');
         }
     };
+
+
+    //
+    // useEffect(() => {
+    //     const savedZones = JSON.parse(localStorage.getItem('savedZones') || '[]');
+    //     console.log("Loaded zones from localStorage", savedZones);
+    //     setRectangles(savedZones);
+    // }, []);
+
+    const handleNavigateToZone = (zoneId: number | null) => {
+        if (zoneId !== null && !activeIds.includes(zoneId)) {
+            setActiveIds(prevActiveIds => [...prevActiveIds, zoneId]);
+        }
+
+        const zone = zoneDataImg.zones.find(z => z.id === zoneId);
+        if (zone) {
+            setActiveMapId(zone.id);
+            setActiveMapUrl(zone.image);
+            setIsHighlightActive(false);
+        }
+
+        setHoveredZoneId(null);
+    };
+
+
+
+
+
     const handleSelectedZoneNameChange = (newName: string) => {
         setCurrentZoneName(newName);
     };
 
 
-    const findAllChildrenIds = (node: TreeNodeData, ids: (number | string)[] = []): (number | string)[] => {
 
-        ids.push(node.id);
-        node.children?.forEach(child => findAllChildrenIds(child, ids));
-        return ids;
+    const enableDeleteMode = () => {
+        setIsDeleteMode(prevMode => {
+            const newMode = !prevMode;
+            console.log("Is Delete Mode Now:", newMode);
+            return newMode;
+        });
     };
+    //
+    // const zoneMaps = {
+    //     2: map2,
+    //     3: map3,
+    //     4: map4,
+    // };
+    //
+    // const handleNavigateToZone = (zoneId: number) => {
+    //     const mapUrl = zoneMaps[zoneId];
+    //     setActiveMapId(zoneId);
+    //     setActiveMapUrl(mapUrl);
+    // };
+
+    //
+    // const handleNavigateToZone = (zoneId: number) => {
+    //     setActiveZoneId(zoneId);
+    //     let mapUrl = "";
+    //     switch (zoneId) {
+    //         case 2:
+    //             mapUrl = MapID2PNG;
+    //             break;
+    //         case 3:
+    //             mapUrl = MapID3PNG;
+    //             break;
+    //         case 4:
+    //             mapUrl = MapID4PNG;
+    //             break;
+    //         default:
+    //             break;
+    //     }
+    //     setActiveMapUrl(mapUrl);
+    // };
+
+
+    //
+    // const resetCurrentZoneData = () => {
+    //     setCurrentZoneData(null);
+    // };
+    //
+    // const resetSelectedZoneName = () => {
+    //     setSelectedZoneName(null);
+    // };
+
+    const handleZoneHover = (zoneId: number | null) => {
+        setHoveredZoneId(zoneId);
+    };
+
+
 
 
     const treeData = {
@@ -330,7 +515,7 @@ const MainMenu = () => {
             },
             {
                 id: 4,
-                name: 'Здание #300: Вокзал пригородного сообщения',
+                name: 'Здание #666: Вокзал пригородного сообщения',
                 isFloor: false,
                 children: [
                     {
@@ -476,12 +661,21 @@ const MainMenu = () => {
                                     isParentActive={false}
                                     activeIds={activeIds}
                                     activeZoneId={activeZoneId}
+                                    onZoneHover={handleZoneHover}
+                                    onNavigateToZone={handleNavigateToZone}
+                                    setActiveFloor={setActiveFloor}
                                     renderActions={(node) => {
                                         return (
                                             node.id === activeNode?.id ? (
                                                 <ButtonsContainer>
-                                                    <Button onClick={() => handlePlaceZone(node.name)}>Разместить зону</Button>
-                                                    <Button onClick={handleSaveZone}>Сохранить</Button>
+                                                    <Button onClick={() => handlePlaceZone(node.name)}><FaPencilRuler /></Button>
+                                                    <Button onClick={handleSaveZone}><IoSaveOutline /></Button>
+                                                    <Button onClick={enableDeleteMode}>
+                                                        {isDeleteMode ? <RiArrowGoBackFill /> : <RiDeleteBin6Line />}
+                                                        {isDeleteMode ? 'Off delete' : 'On delete'}
+                                                    </Button>
+
+                                                    <Button><LiaPenSolid /></Button>
                                                 </ButtonsContainer>
                                             ) : null
                                         );
@@ -498,6 +692,7 @@ const MainMenu = () => {
                             <SearchInput placeholder="Поиск по ID" />
                         </SearchIDContainer>
 
+                        {/*{activeMapId && (*/}
                         <CanvasComponent
                             onZoneClick={handleZoneClick}
                             activeZoneId={activeZoneId}
@@ -509,9 +704,17 @@ const MainMenu = () => {
                             setActiveZoneId={setActiveZoneId}
                             selectedZoneName={currentZoneName}
                             onSelectedZoneNameChange={handleSelectedZoneNameChange}
+                            isDeleteMode={isDeleteMode}
+                            // resetCurrentZoneData={resetCurrentZoneData}
+                            // resetSelectedZoneName={resetSelectedZoneName}
+                            hoveredZoneId={hoveredZoneId}
+                            activeMapId={activeMapId}
+                            activeMapUrl={activeMapUrl}
+                            isHighlightActive={isHighlightActive}
+
 
                         />
-
+                        {/*)}*/}
 
 
                         <InfoAndLegendWrapper>

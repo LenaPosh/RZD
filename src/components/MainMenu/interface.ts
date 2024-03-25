@@ -35,6 +35,11 @@ export interface TreeProps {
     activeIds: (number | string)[];
     renderActions: (node: TreeNodeData) => React.ReactNode;
     activeZoneId: number | null;
+    onZoneHover: (zoneId: number | null) => void;
+    onNavigateToZone?: (zoneId: number) => void;
+    // collapsedNodes: {[key: number | string]: boolean};
+    // setCollapsedNodes: React.Dispatch<React.SetStateAction<{[key: number | string]: boolean}>>;
+    setActiveFloor: (floorId: number | string | null) => void;
 }
 
 
@@ -52,20 +57,6 @@ export interface BriefInfoProps {
     info: BriefInfoData | null;
 }
 
-export interface ComplexData {
-    id: number;
-    name: string;
-    status: string;
-    type: string;
-    area: string;
-    levels: LevelData[];
-}
-
-export interface LevelData {
-    id: number;
-    name: string;
-    zones: ZoneData[];
-}
 
 export interface ZoneData {
     id: number;

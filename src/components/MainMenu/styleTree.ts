@@ -45,9 +45,9 @@ export const TreeNode = styled.div<TreeNodeProps>`
   display: flex;
   align-items: center;
   cursor: pointer;
-  padding: 5px;
+  //padding: 5px;
   border-radius: 5px;
-  background-color: ${props => props.$isActive ? 'white' : '#F2F4F6'};
+  background-color: ${props => props.$isActive || props.$isParentActive ? 'white' : '#F2F4F6'};
   color: ${props => (props.$isActive && props.$isFloor) ? '#5FC15D' : 'black'};
   margin-left: ${props => props.$level * 3}px;
   font-weight: ${props => props.$isFloor ? 'bold' : 'normal'};
