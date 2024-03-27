@@ -1,4 +1,4 @@
-import React, { useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {GlobalStyle} from "../TopMenu";
 import { ReactComponent as ArrowUpSVG } from '../icons/arrowUp.svg';
 import {
@@ -17,7 +17,18 @@ import {
 } from "./style";
 import { ReactComponent as ArrowDownSVG } from '../icons/arrowDown.svg';
 import {TreeNodeData, TreeProps} from "./interface";
-import {ComplexContainer, TreeNode, TreeText, TreeIcon, TreeChildren, StyledCircleGreenSVG, StyledCircleVioletEmptySVG, TreeGroupContainer, Button, ButtonsContainer} from "./styleTree";
+import {
+    ComplexContainer,
+    TreeNode,
+    TreeText,
+    TreeIcon,
+    TreeChildren,
+    StyledCircleGreenSVG,
+    StyledCircleVioletEmptySVG,
+    TreeGroupContainer,
+    Button,
+    TreeTextContainer
+} from "./styleTree";
 import {MapAndInfoWrapper, InfoAndLegendWrapper, SearchLegendSVG} from "./styleMapAndInfo";
 import {BriefInfoData} from './interface'
 // import {ComplexData} from "./interface";
@@ -30,13 +41,12 @@ import {BRIEF_INFO_URL} from "./BriefInfo";
 import {BriefInfo} from "./BriefInfo";
 import CanvasComponent from "./CanvasComponent";
 // import axios from "axios";
-import { FaPencilRuler } from "react-icons/fa";
-import { IoSaveOutline } from "react-icons/io5";
-import { RiArrowGoBackFill } from "react-icons/ri";
-import { LiaPenSolid } from "react-icons/lia";
-import { RiDeleteBin6Line } from "react-icons/ri";
-import zoneDataImg from "./zoneData";
 
+import zoneDataImg from "./zoneData";
+import {ReactComponent as ButtonGoSVG} from '../icons/buttonGo.svg'
+import {ReactComponent as ButtonPlusSVG} from "../icons/buttonPlus.svg";
+import {ReactComponent as ButtonSaveSVG} from "../icons/buttonSave.svg";
+import {ReactComponent as ButtonEditSVG} from "../icons/buttonEdit.svg";
 
 
 // const TREE_DATA_URL = "";
@@ -49,17 +59,21 @@ const Tree: React.FC<TreeProps> = React.memo(({
     isParentActive,
     activeIds,
     activeZoneId,
-    renderActions,
+    // renderActions,
     onZoneHover,
     onNavigateToZone,
-    setActiveFloor
+    setActiveFloor, buttonGroup
+    // onAdd, onEdit, onSave, onEditSave
     }) => {
 
-    console.log("Рендер узла:", data.id, "Активные ID:", activeIds);
+    console.log("Рендер компонента Tree", { data, activeIds, activeZoneId });
     const [collapsed, setCollapsed] = React.useState(false);
     const isPseudoElement = data.isPseudoElement || level > 1;
     const hasChildren = !isPseudoElement && !!data.children && data.children.length > 0;
     const [isParentClicked, setIsParentClicked] = useState(false);
+    const [isHovered, setIsHovered] = useState(false);
+    const [hoveredId, setHoveredId] = useState<number | null>(null);
+    const [clickedChild, setClickedChild] = useState<number | null>(null);
 
 
     // const handleToggle = () => {
@@ -74,8 +88,11 @@ const Tree: React.FC<TreeProps> = React.memo(({
     const handleToggle = () => {
         setCollapsed(!collapsed);
 
-        if (level === 1) {
+        if (level === 2) {
+            setClickedChild(Number(data.id));
+        } else if (level === 1) {
             setIsParentClicked(!isParentClicked);
+            setClickedChild(null);
         }
 
         onFloorClick(data.id, data);
@@ -94,23 +111,24 @@ const Tree: React.FC<TreeProps> = React.memo(({
     };
 
     const handleMouseEnter = (zoneId: number) => {
+        console.log(`handleMouseEnter: ${zoneId}`, { hoveredId, isHovered });
+        setHoveredId(zoneId);
+        setIsHovered(true);
         if (activeZoneId !== zoneId) {
-            console.log('Мышь наведена на зону с идентификатором:', zoneId);
             onZoneHover(zoneId);
         }
     };
 
-
     const handleMouseLeave = () => {
-        console.log('Мышь покинула зону');
+        console.log("handleMouseLeave", { hoveredId, isHovered });
+        setHoveredId(null);
         onZoneHover(null);
     };
 
     const containsActiveId = (node: TreeNodeData, activeIds: Array<number | string>): boolean => {
-        console.log(`Checking if active IDs contain node: ${node.id}`);
 
         if (activeIds.includes(node.id)) {
-            console.log(`Node ${node.id} is active`);
+            console.log(`containsActiveId: ${node.id}`, { isActive: activeIds.includes(node.id) });
             return true;
         }
         if (node.children) {
@@ -121,7 +139,7 @@ const Tree: React.FC<TreeProps> = React.memo(({
 
 
     const checkIsParentOfActive = (nodeId: number | string, activeIds: Array<number | string>, currentNode: TreeNodeData): boolean => {
-        console.log(`Checking if node ${nodeId} is parent of an active node`);
+
         const findNodeById = (node: TreeNodeData, id: number | string): TreeNodeData | null => {
             if (node.id === id) return node;
             if (node.children) {
@@ -135,15 +153,18 @@ const Tree: React.FC<TreeProps> = React.memo(({
 
         const node = findNodeById(currentNode, nodeId);
         const isParentActive = !!node && containsActiveId(node, activeIds);
-        console.log(`Is node ${nodeId} a parent of active node: ${isParentActive}`);
+        // console.log(`Is node ${nodeId} a parent of active node: ${isParentActive}`);
         return isParentActive;
 
     };
 
     const isParentOfActiveNode = checkIsParentOfActive(data.id, activeIds, data);
 
-
-
+    const isChildNode = level === 2;
+    console.log(`TreeText render: ${data.id}`, {
+        backgroundColor: hoveredId === data.id ? 'rgba(255,255,255,0.8)' : 'transparent',
+        isHovered: hoveredId === data.id,
+    });
     return (
         <ComplexContainer>
             <TreeGroupContainer $isActive={activeIds.includes(data.id)  || data.id === activeZoneId}>
@@ -159,38 +180,43 @@ const Tree: React.FC<TreeProps> = React.memo(({
                 >
                     {level > 0 && !data.isFloor && (level === 1 ? <StyledCircleGreenSVG/> : <StyledCircleVioletEmptySVG/>)}
                     <div style={{ flex: 1 }}>
-                        <TreeText
-                            $level={level}
-                            $isFloor={data.isFloor}
-                            $isParentActive={isParentActive}
-                            $activeIds={activeIds}
-                            $onFloorClick={onFloorClick}
-                            onClick={handleToggle}
-                            onMouseEnter={() => {
-                                if (!activeZoneId) {
+                        <TreeTextContainer>
+                            <TreeText
+                                $level={level}
+                                $isFloor={data.isFloor}
+                                $isParentActive={isParentActive}
+                                $activeIds={activeIds}
+                                $onFloorClick={onFloorClick}
+                                onClick={handleToggle}
+                                onMouseEnter={() => {
                                     handleMouseEnter(Number(data.id));
-                                }
-                            }}
-                            onMouseLeave={() => {
-                                if (!activeZoneId) {
-                                    handleMouseLeave();
-                                }
-                            }}
-                        >
+                                }}
+                                onMouseLeave={handleMouseLeave}
+                                style={{
+                                    backgroundColor: hoveredId === data.id ? 'rgba(255,255,255,0.8)' : 'transparent',
+                                    transition: 'background-color 0.3s ease',
+                                }}
+                            >
 
-                            {data.name}
-                        </TreeText>
-                        {level === 1 && hasChildren && isParentClicked && (
-                            <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
-                                <Button onClick={() => {
-                                    onNavigateToZone?.(Number(data.id));
-                                }}>
-                                    Перейти
-                                </Button>
-                            </div>
-                        )}
+                                {data.name}
+                            </TreeText>
+                            {level === 1 && hasChildren && isParentClicked && (
+                                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                                    <Button onClick={() => {
+                                        onNavigateToZone?.(Number(data.id));
+                                    }}>
+                                        <ButtonGoSVG/>
+                                    </Button>
+                                </div>
+                            )}
+                            {isChildNode && buttonGroup(data.id, clickedChild)}
 
-                        {data.isPseudoElement && renderActions && renderActions(data)}
+
+
+                        </TreeTextContainer>
+
+
+                        {data.isPseudoElement}
                     </div>
                     <TreeIcon $hasChildren={hasChildren} onClick={handleArrowClick}>
                         {hasChildren && !isPseudoElement && (collapsed ? <ArrowUpSVG /> : <ArrowDownSVG />)}
@@ -209,10 +235,10 @@ const Tree: React.FC<TreeProps> = React.memo(({
                                 isParentActive={isParentActive || isParentOfActiveNode}
                                 activeIds={activeIds}
                                 activeZoneId={activeZoneId}
-                                renderActions={renderActions}
                                 onZoneHover={onZoneHover}
                                 onNavigateToZone={onNavigateToZone}
                                 setActiveFloor={setActiveFloor}
+                                buttonGroup={buttonGroup}
 
                             />
                         ))}
@@ -244,7 +270,7 @@ const MainMenu = () => {
     // const [complexData, setComplexData] = useState<ComplexData | null>(null);
     const [activeIds, setActiveIds] = useState<(number | string)[]>([]);
     const [isDrawingMode, setIsDrawingMode] = useState(false)
-    const [activeNode, setActiveNode] = useState<TreeNodeData | null>(null);
+    const [, setActiveNode] = useState<TreeNodeData | null>(null);
     const [currentZoneData, setCurrentZoneData] = useState<ZoneData | null>(null);
     const [rectangles, setRectangles] = useState<ZoneData[]>([]);
     const [activeZoneId, setActiveZoneId] = useState<number | null>(null);
@@ -255,13 +281,13 @@ const MainMenu = () => {
     const [activeMapId, setActiveMapId] = useState<number | null>(null);
     const [activeMapUrl, setActiveMapUrl] = useState("");
     const [isHighlightActive, setIsHighlightActive] = useState(true);
+    const [isSaveMode, setIsSaveMode] = useState(false);
 
     const findZoneRectangle = (zoneId: number | null) => {
         return rectangles.find(rect => rect.zoneId === zoneId);
     };
 
     const handleFloorClick = (floorId: number | string, node?: TreeNodeData): void => {
-        console.log(`handleFloorClick вызван с floorId: ${floorId}`);
         setActiveFloor(floorId);
         setActiveNode(node ? node : null);
 
@@ -281,9 +307,6 @@ const MainMenu = () => {
             });
         }
 
-
-
-        // Оставляем логику прямоугольников на карте без изменений
         if (node && node.isPseudoElement) {
             const numericFloorId = typeof floorId === 'string' ? parseInt(floorId, 10) : floorId;
             const zoneRectangle = findZoneRectangle(numericFloorId);
@@ -294,7 +317,7 @@ const MainMenu = () => {
                 setCurrentZoneName(zoneRectangle.name ?? null);
             } else {
                 setActiveZoneId(numericFloorId);
-                setIsDrawingMode(true);
+                // setIsDrawingMode(true);
                 setCurrentZoneName(node.name);
             }
         }
@@ -303,19 +326,15 @@ const MainMenu = () => {
 
 
     const handleZoneClick = (zoneId: number | null) => {
-        console.log(`handleZoneClick вызван с zoneId: ${zoneId}`);
         const zoneRectangle = rectangles.find(rect => rect.zoneId === zoneId);
         if (zoneRectangle) {
             setActiveZoneId(zoneRectangle.id);
             setIsDrawingMode(false);
             setSelectedZoneName(zoneRectangle.name ?? "");
-            console.log(`Зона ${zoneRectangle.id} уже имеет прямоугольник`);
         } else {
-            console.log(`Зона ${zoneId} не найдена, включаем режим рисования`);
             setActiveZoneId(null);
             setIsDrawingMode(true);
             setSelectedZoneName("");
-            // console.log(`Зона с ID: ${zoneId} не найдена, режим рисования включен.`);
         }
     };
 
@@ -325,15 +344,9 @@ const MainMenu = () => {
     };
 
 
-    const handlePlaceZone = (zoneName: string) => {
-        setIsDrawingMode(true);
-        // console.log("setCurrentZoneName called from handleZoneClick", zoneName);
-        setCurrentZoneName(zoneName);
-    };
 
-
-    const handleSaveZone = () => {
-        console.log('Вызов handleSaveZone');
+    const handleSaveZone = (nodeId: number | string) => {
+        // console.log('Вызов handleSaveZone');
         if (currentZoneData && currentZoneName) {
             const index = rectangles.findIndex(rect => rect.id === currentZoneData.id);
             let updatedZones;
@@ -344,16 +357,16 @@ const MainMenu = () => {
                 updatedZones = [...rectangles, { ...currentZoneData, name: currentZoneName }];
             }
 
-            console.log('Обновленный список зон:', updatedZones);
             localStorage.setItem('savedZones', JSON.stringify(updatedZones));
             setRectangles(updatedZones);
-            console.log('Зоны сохранены в localStorage');
+            // console.log('Зоны сохранены в localStorage');
             setCurrentZoneData(null);
             setSelectedZoneName(null);
             setActiveIds([]);
         } else {
-            console.log('Данные зоны или имя зоны отсутствуют');
+            // console.log('Данные зоны или имя зоны отсутствуют');
         }
+        setIsDrawingMode(false);
     };
 
 
@@ -389,59 +402,65 @@ const MainMenu = () => {
 
 
 
-    const enableDeleteMode = () => {
-        setIsDeleteMode(prevMode => {
-            const newMode = !prevMode;
-            console.log("Is Delete Mode Now:", newMode);
-            return newMode;
-        });
-    };
-    //
-    // const zoneMaps = {
-    //     2: map2,
-    //     3: map3,
-    //     4: map4,
-    // };
-    //
-    // const handleNavigateToZone = (zoneId: number) => {
-    //     const mapUrl = zoneMaps[zoneId];
-    //     setActiveMapId(zoneId);
-    //     setActiveMapUrl(mapUrl);
-    // };
-
-    //
-    // const handleNavigateToZone = (zoneId: number) => {
-    //     setActiveZoneId(zoneId);
-    //     let mapUrl = "";
-    //     switch (zoneId) {
-    //         case 2:
-    //             mapUrl = MapID2PNG;
-    //             break;
-    //         case 3:
-    //             mapUrl = MapID3PNG;
-    //             break;
-    //         case 4:
-    //             mapUrl = MapID4PNG;
-    //             break;
-    //         default:
-    //             break;
-    //     }
-    //     setActiveMapUrl(mapUrl);
-    // };
-
-
-    //
-    // const resetCurrentZoneData = () => {
-    //     setCurrentZoneData(null);
-    // };
-    //
-    // const resetSelectedZoneName = () => {
-    //     setSelectedZoneName(null);
-    // };
 
     const handleZoneHover = (zoneId: number | null) => {
         setHoveredZoneId(zoneId);
     };
+
+    const handleStartDrawing = (nodeId: number | string) => {
+        setIsDrawingMode(true);
+    };
+    //
+    // useEffect(() => {
+    //     if (isDrawingMode) {
+    //         setIsDrawingStarted(true);
+    //     }
+    // }, [isDrawingMode]);
+
+
+
+    useEffect(() => {
+        console.log("Режим рисования изменен на:", isDrawingMode);
+    }, [isDrawingMode]);
+
+
+    const handleDeleteRectangle = (rectId: number | string) => {
+        console.log(`Attempting to delete rectangle with ID: ${rectId}`);
+        setRectangles(rectangles.filter(rect => rect.id !== rectId));
+        setIsSaveMode(true);
+    };
+
+
+    const buttonGroup = (nodeId: number | string, clickedChild: number | string | null) => {
+        console.log(`buttonGroup: nodeId=${nodeId}, clickedChild=${clickedChild}, isDrawingMode=${isDrawingMode}, isSaveMode=${isSaveMode}`);
+        if (clickedChild === nodeId) {
+            if (!isDrawingMode && !isSaveMode) {
+
+                return (
+                    <>
+                        <Button onClick={() => handleStartDrawing(nodeId)}>
+                            <ButtonPlusSVG />
+                        </Button>
+                        <Button onClick={() => handleDeleteRectangle(nodeId)}>
+                            <ButtonEditSVG />
+                        </Button>
+                    </>
+                );
+            } else if (isDrawingMode || isSaveMode) {
+                return (
+                    <Button onClick={() => handleSaveZone(nodeId)}>
+                        <ButtonSaveSVG />
+                    </Button>
+                );
+            }
+        }
+        return null;
+    };
+
+
+
+
+
 
 
 
@@ -667,22 +686,8 @@ const MainMenu = () => {
                                     onZoneHover={handleZoneHover}
                                     onNavigateToZone={handleNavigateToZone}
                                     setActiveFloor={setActiveFloor}
-                                    renderActions={(node) => {
-                                        return (
-                                            node.id === activeNode?.id ? (
-                                                <ButtonsContainer>
-                                                    <Button onClick={() => handlePlaceZone(node.name)}><FaPencilRuler /></Button>
-                                                    <Button onClick={handleSaveZone}><IoSaveOutline /></Button>
-                                                    <Button onClick={enableDeleteMode}>
-                                                        {isDeleteMode ? <RiArrowGoBackFill /> : <RiDeleteBin6Line />}
-                                                        {isDeleteMode ? 'Off delete' : 'On delete'}
-                                                    </Button>
+                                    buttonGroup={buttonGroup}
 
-                                                    <Button><LiaPenSolid /></Button>
-                                                </ButtonsContainer>
-                                            ) : null
-                                        );
-                                    }}
                                 />
                         {/*    ) : (*/}
                         {/*        "Loading..."*/}

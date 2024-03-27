@@ -34,13 +34,15 @@ export interface TreeProps {
     activeFloorId: number | string | null;
     isParentActive: boolean;
     activeIds: (number | string)[];
-    renderActions: (node: TreeNodeData) => React.ReactNode;
+    // renderActions: (node: TreeNodeData) => React.ReactNode;
     activeZoneId: number | null;
     onZoneHover: (zoneId: number | null) => void;
     onNavigateToZone?: (zoneId: number) => void;
     // collapsedNodes: {[key: number | string]: boolean};
     // setCollapsedNodes: React.Dispatch<React.SetStateAction<{[key: number | string]: boolean}>>;
     setActiveFloor: (floorId: number | string | null) => void;
+    buttonGroup: (nodeId: number | string, clickedChild: number | string | null) => React.ReactElement | null;
+
 }
 
 

@@ -66,6 +66,7 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({
     // const [isResizingMode, setIsResizingMode] = useState(false);
     // const resizingStartPoint = useRef<Point | null>(null);
 
+
     useEffect(() => {
         const newApp = new Application();
 
@@ -126,6 +127,7 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({
             }
 
             const { x, y } = event.data.global;
+            console.log(`Pointer down at (${x}, ${y}). Is drawing mode? ${isDrawingMode}`);
             startPointRef.current = { x, y };
             currentRectangleRef.current = new Graphics();
             app.stage.addChild(currentRectangleRef.current);
@@ -170,7 +172,7 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({
                 name: selectedZoneName ?? "Новая зона",
                 color: fillColor,
             };
-            // console.log(`Pointer up. Rectangle created: `, newRect);
+            console.log(`Pointer up. Rectangle created: `, newRect);
             onTempRectangleChange(newRect);
 
             startPointRef.current = null;
@@ -251,29 +253,23 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({
 
 
     const removeRectangleById = (rectId: number) => {
-        // console.log(`Attempting to remove rectangle with ID: ${rectId}`);
-
-        if (!app) {
-            // console.log("App is not initialized");
-            return;
-        }
-
-
-        const graphicsToRemove = app.stage.children.find(child => child.label === `zone_${rectId}`);
-        if (graphicsToRemove) {
+        console.log(`Попытка удалить прямоугольник с ID: ${rectId}`);
+        const graphicsToRemove = app?.stage.children.find(child => child instanceof Graphics && child.label === `zone_${rectId}`);
+        if (graphicsToRemove && app) {
             app.stage.removeChild(graphicsToRemove);
-            // console.log(`Removed rectangle with ID: ${rectId} from the stage.`);
+            console.log(`Removed rectangle with ID: ${rectId} from the stage.`);
         }
 
-        const updatedRectangles = rectangles.filter(rect => {
-            const toKeep = rect.id !== rectId;
-            console.log(`Filtering rect ID: ${rect.id}, Keep: ${toKeep}`);
-            return toKeep;
-        });
-        setRectangles(prevRectangles => prevRectangles.filter(rect => String(rect.id) !== String(rectId)));
+        const updatedRectangles = rectangles.filter(rect => rect.id !== rectId);
+        setRectangles(updatedRectangles);
 
         localStorage.setItem('savedZones', JSON.stringify(updatedRectangles));
+
+        // Опционально: перерисовываем все оставшиеся зоны, если это необходимо
+        // redrawZones(updatedRectangles);
     };
+
+
 
     useEffect(() => {
 
@@ -307,11 +303,10 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({
                 // zoneGraphics.off('pointerdown');
 
                 zoneGraphics.on('pointerdown', () => {
-                    console.log(`Clicked on rectangle with ID: ${rect.id}, isDeleteModeRef.current at click:`, isDeleteModeRef.current);
-                    if (isDeleteModeRef.current) {
-                        console.log(`Removing rectangle with ID: ${rect.id}`);
+                    console.log(`Rectangle ${rect.id} clicked. Current delete mode: ${isDeleteMode}`);
+                    if (isDeleteMode) {
+                        console.log(`Deleting rectangle with ID: ${rect.id}`);
                         removeRectangleById(rect.id);
-                        return;
                     }
                     handleSelect();
                 });
@@ -420,8 +415,7 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({
     const scale = 51;
 
     const highlightZone = (zoneGraphic: ZoneGraphics, highlight: boolean): void => {
-        // console.log(`Подсветка зоны с ID: ${zoneGraphic.zoneId}, состояние подсветки: ${highlight}`);
-        const { graphics, width, height, x, y } = zoneGraphic;
+        const { graphics, width, height, x, y, zoneId } = zoneGraphic; // Убедитесь, что zoneId доступен
 
         if (app && app.stage && !app.stage.children.includes(graphics)) {
             app.stage.addChild(graphics);
@@ -429,21 +423,23 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({
 
         graphics.clear();
 
-        graphics.stroke({ color: highlight ? 0xFF0000 : 0x000000, alpha: 1});
+        const isEvenZoneId = zoneId % 2 === 0;
+        const fillColor = isEvenZoneId ? 'rgba(143, 255, 0, 0.2)' : 'rgba(128, 128, 128, 0.5)';
+        const strokeColor = isEvenZoneId ? 0x5FC15D : 0x555555;
+        const fillAlpha = 0.7;
 
-        const fillColor = highlight ? 0xFF0000 : 0xCCCCCC;
-        const fillAlpha = highlight ? 0.2 : 0.3;
+        graphics.stroke({width: 3, color: strokeColor, alpha: 1 });
+
         graphics
-            .fill({color: fillColor, alpha:fillAlpha})
+            .fill({color: fillColor, alpha: fillAlpha})
             .rect(x, y, width * scale, height * scale)
             .fill();
-
-        // console.log(`Зона ${zoneId} подсвечена`);
 
         if (app) {
             app.renderer.render(app.stage);
         }
     };
+
 
 
 
@@ -480,19 +476,18 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({
 
 
     useEffect(() => {
+        if (!app) return;
 
-        if (app) {
-            console.log('Добавление графических объектов на app.stage');
-            zonesGraphics.forEach(zoneGraphic => {
-                if (!app.stage.children.includes(zoneGraphic.graphics)) {
-                    app.stage.addChild(zoneGraphic.graphics);
-                }
-            });
+        zonesGraphics.forEach(zoneGraphic => {
+            if (!app.stage.children.includes(zoneGraphic.graphics)) {
+                app.stage.addChild(zoneGraphic.graphics);
+            }
+            highlightZone(zoneGraphic, true);
+        });
 
-            app.renderer.render(app.stage);
-        }
-// eslint-disable-next-line react-hooks/exhaustive-deps
+        app.renderer.render(app.stage);
     }, [app]);
+
 
     useEffect(() => {
         // console.log(`isHighlightActive changed to ${isHighlightActive}. Will ${isHighlightActive ? 'highlight' : 'reset'} zones.`);
@@ -503,16 +498,46 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({
     }, [isHighlightActive, app]);
 
 
+    // useEffect(() => {
+    //     if (!app || !activeMapUrl) return;
+    //
+    //     // resetHighlight();
+    //     setRectangles([]);
+    //     if (backgroundRef.current) {
+    //         app.stage.removeChild(backgroundRef.current);
+    //         backgroundRef.current.destroy();
+    //     }
+    //     // console.log(`Active map URL changed to ${activeMapUrl}. Will reset highlight and load new background.`);
+    //     Assets.load(activeMapUrl).then(() => {
+    //         const texture = Texture.from(activeMapUrl);
+    //         const background = new Sprite(texture);
+    //         background.width = app.screen.width;
+    //         background.height = app.screen.height;
+    //         background.interactive = true;
+    //         app.stage.addChildAt(background, 0);
+    //         backgroundRef.current = background;
+    //
+    //
+    //
+    //         const newGraphics = new Graphics();
+    //         app.stage.addChild(newGraphics);
+    //         graphicsRef.current = newGraphics;
+    //
+    //
+    //     });
+    //     app.stage.removeChildren();
+    // }, [app, activeMapUrl]);
+
+
     useEffect(() => {
         if (!app || !activeMapUrl) return;
 
-        // resetHighlight();
+        app.stage.removeChildren();
 
         if (backgroundRef.current) {
-            app.stage.removeChild(backgroundRef.current);
             backgroundRef.current.destroy();
         }
-        // console.log(`Active map URL changed to ${activeMapUrl}. Will reset highlight and load new background.`);
+
         Assets.load(activeMapUrl).then(() => {
             const texture = Texture.from(activeMapUrl);
             const background = new Sprite(texture);
@@ -522,22 +547,14 @@ const CanvasComponent: React.FC<CanvasComponentProps> = ({
             app.stage.addChildAt(background, 0);
             backgroundRef.current = background;
 
-
-
             const newGraphics = new Graphics();
             app.stage.addChild(newGraphics);
             graphicsRef.current = newGraphics;
-
-
-
-
-
-
-
         });
-        app.stage.removeChildren();
-    }, [app, activeMapUrl]);
 
+        setRectangles([]);
+
+    }, [app, activeMapUrl]);
 
 
 

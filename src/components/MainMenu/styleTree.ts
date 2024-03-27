@@ -5,7 +5,6 @@ import {TreeChildrenProps, TreeIconProps, TreeNodeProps} from "./interface";
 
 export const TreeIcon = styled.span<TreeIconProps>`
   margin-left: 2px;
-  margin-right: 5px;
   display: ${props => props.$hasChildren ? 'inline' : 'none'};
 `;
 
@@ -48,7 +47,7 @@ export const TreeNode = styled.div<TreeNodeProps>`
   //padding: 5px;
   border-radius: 5px;
   color: ${props => (props.$isActive && props.$isFloor) ? '#5FC15D' : 'black'};
-  margin-left: ${props => props.$level * 3}px;
+  margin-left: ${props => props.$level * 2}px;
   font-weight: ${props => props.$isFloor ? 'bold' : 'normal'};
   background-color: ${props => props.$isActive ? 'white' : 'transparent'};
   
@@ -112,54 +111,47 @@ export const TreeGroupContainer = styled.div<{ $isActive: boolean }>`
 `;
 
 export const Button = styled.button`
-  padding: 8px 10px;
+  padding: 0;
   font-size: 10px;
-  color: white;
-  background-color: #5FC15D;
   border: none;
-  border-radius: 5px;
   cursor: pointer;
   margin-right: 5px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
-  &:hover {
-    background-color: #4eb14e;
-  }
+  //&:hover {
+  //  background-color: #4eb14e;
+  //}
 
   &:focus {
     outline: none;
   }
 
-  &:active {
-    background-color: #449644;
-  }
+  //&:active {
+  //  background-color: #449644;
+  //}
 
   &:last-child {
-    margin-right: 0;
+    margin-right: 7px;
   }
 `;
 
 export const ButtonsContainer = styled.div`
   display: flex;
-  justify-content: space-around;
   align-items: center;
-  padding: 4px;
+  justify-content: flex-end;
+  padding: 0;
   margin-top: 4px;
-  background-color: #F8F8F8;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-
-  & > button {
-    padding: 8px 10px;
-    border: none;
-    border-radius: 4px;
-    background-color: #5FC15D;
-    color: white;
-    font-size: 10px;
-    cursor: pointer;
-
-    &:hover {
-      background-color: #4eb14e;
-    }
-  }
 `;
+
+
+export const TreeTextContainer = styled.div`
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+`;
+
+
